@@ -50,6 +50,7 @@ kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime",
 
 # Testing
 robolectric = { group = "org.robolectric", name = "robolectric", version = "4.14.1" }
+turbine = { group = "app.cash.turbine", name = "turbine", version = "1.2.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

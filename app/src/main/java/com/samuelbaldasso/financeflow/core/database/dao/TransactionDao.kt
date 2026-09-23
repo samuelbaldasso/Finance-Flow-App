@@ -56,13 +56,13 @@ abstract class TransactionDao {
                 WHEN type = 'INCOME' THEN amount_minor
                 WHEN type = 'EXPENSE' THEN -amount_minor
                 WHEN type = 'ADJUSTMENT' THEN amount_minor
-                WHEN type = 'TRANSFER' AND destination_account_id = :accountId THEN amount_minor
-                WHEN type = 'TRANSFER' AND account_id = :accountId THEN -amount_minor
+                WHEN type = 'TRANSFER' AND destination_account_id IS NOT NULL THEN -amount_minor
+                WHEN type = 'TRANSFER' AND destination_account_id IS NULL THEN amount_minor
                 ELSE 0
             END
         ), 0)
         FROM transactions 
-        WHERE account_id = :accountId OR destination_account_id = :accountId
+        WHERE account_id = :accountId
     """)
     abstract fun getDerivedBalanceSumMinorFlow(accountId: UUID): Flow<Long>
 

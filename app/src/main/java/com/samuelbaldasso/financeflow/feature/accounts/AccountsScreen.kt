@@ -1,6 +1,7 @@
 package com.samuelbaldasso.financeflow.feature.accounts
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
@@ -22,12 +24,15 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,11 +51,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.samuelbaldasso.financeflow.core.model.account.AccountType
 import com.samuelbaldasso.financeflow.core.model.money.CurrencyCode
 import com.samuelbaldasso.financeflow.designsystem.component.FinancialEmptyState
 import com.samuelbaldasso.financeflow.designsystem.component.FinancialMoneyText
+import com.samuelbaldasso.financeflow.designsystem.theme.EmeraldHeroGradient
+import com.samuelbaldasso.financeflow.designsystem.theme.LocalFinancialColors
 import com.samuelbaldasso.financeflow.domain.repository.AccountWithBalance
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,10 +70,24 @@ fun AccountsScreen(
     onEvent: (AccountsUiEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var balancesVisible by remember { mutableStateOf(true) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Contas & Saldos") },
+                title = {
+                    Column {
+                        Text(
+                            text = "FinanceFlow",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = "Gestão de Contas & Patrimônio",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 actions = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -85,7 +109,9 @@ fun AccountsScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onEvent(AccountsUiEvent.OpenCreateDialog) }
+                onClick = { onEvent(AccountsUiEvent.OpenCreateDialog) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Nova Conta")
             }
@@ -98,52 +124,34 @@ fun AccountsScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            // Summary Card
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Patrimônio Líquido",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    FinancialMoneyText(
-                        money = state.totalBrlBalance,
-                        currency = CurrencyCode.BRL,
-                        style = MaterialTheme.typography.headlineMedium,
-                        colorOverride = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    if (state.totalUsdBalance.amountMinor > 0L) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        FinancialMoneyText(
-                            money = state.totalUsdBalance,
-                            currency = CurrencyCode.USD,
-                            style = MaterialTheme.typography.titleMedium,
-                            colorOverride = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-            }
+            // Hero Net Worth Card
+            HeroNetWorthCard(
+                state = state,
+                balancesVisible = balancesVisible,
+                onToggleVisibility = { balancesVisible = !balancesVisible }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "Minhas Contas (${state.accounts.size})",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (state.accounts.isEmpty()) {
                 FinancialEmptyState(
                     title = "Nenhuma conta cadastrada",
-                    description = "Crie sua primeira conta bancária, carteira ou cartão para começar a controlar seu fluxo financeiro.",
+                    description = "Crie sua primeira conta corrente, poupança, dinheiro ou cartão para começar a controlar seus saldos.",
                     icon = Icons.Default.AccountBalance,
                     actionButtonText = "Adicionar Conta",
                     onActionClick = { onEvent(AccountsUiEvent.OpenCreateDialog) }
                 )
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(
@@ -153,6 +161,7 @@ fun AccountsScreen(
                     ) { item ->
                         AccountItemCard(
                             item = item,
+                            balancesVisible = balancesVisible,
                             onArchiveClick = { onEvent(AccountsUiEvent.ArchiveAccount(item.account.id)) }
                         )
                     }
@@ -182,20 +191,135 @@ fun AccountsScreen(
 }
 
 @Composable
+private fun HeroNetWorthCard(
+    state: AccountsUiState,
+    balancesVisible: Boolean,
+    onToggleVisibility: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(EmeraldHeroGradient)
+                .padding(20.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "PATRIMÔNIO LÍQUIDO",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        ),
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+
+                    IconButton(
+                        onClick = onToggleVisibility,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (balancesVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (balancesVisible) "Ocultar saldos" else "Mostrar saldos",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                if (balancesVisible) {
+                    FinancialMoneyText(
+                        money = state.totalBrlBalance,
+                        currency = CurrencyCode.BRL,
+                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                        colorOverride = Color.White
+                    )
+
+                    if (state.totalUsdBalance.amountMinor > 0L) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White.copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "USD",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                            FinancialMoneyText(
+                                money = state.totalUsdBalance,
+                                currency = CurrencyCode.USD,
+                                style = MaterialTheme.typography.titleMedium,
+                                colorOverride = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "••••••••",
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 4.sp
+                        ),
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "${state.accounts.size} conta(s) ativa(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun AccountItemCard(
     item: AccountWithBalance,
+    balancesVisible: Boolean,
     onArchiveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val financialColors = LocalFinancialColors.current
     val account = item.account
+
+    val (icon, typeLabel, iconBgColor, iconTint) = when (account.type) {
+        AccountType.CHECKING -> Quadruple(Icons.Default.AccountBalance, "Conta Corrente", financialColors.transferContainer, financialColors.transfer)
+        AccountType.SAVINGS -> Quadruple(Icons.Default.Savings, "Poupança", financialColors.incomeContainer, financialColors.income)
+        AccountType.CASH -> Quadruple(Icons.Default.Wallet, "Carteira / Dinheiro", financialColors.warningContainer, financialColors.warning)
+        AccountType.INVESTMENT -> Quadruple(Icons.Default.TrendingUp, "Investimentos", Color(0xFFF3E8FF), Color(0xFF7E22CE))
+        AccountType.CREDIT_CARD -> Quadruple(Icons.Default.CreditCard, "Cartão de Crédito", financialColors.expenseContainer, financialColors.expense)
+    }
+
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (account.isArchived) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (account.isArchived) 0.dp else 2.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, financialColors.cardBorder, RoundedCornerShape(16.dp))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -203,25 +327,17 @@ private fun AccountItemCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            val (icon, typeLabel) = when (account.type) {
-                AccountType.CHECKING -> Icons.Default.AccountBalance to "Conta Corrente"
-                AccountType.SAVINGS -> Icons.Default.Savings to "Poupança"
-                AccountType.CASH -> Icons.Default.Wallet to "Dinheiro"
-                AccountType.INVESTMENT -> Icons.Default.TrendingUp to "Investimento"
-                AccountType.CREDIT_CARD -> Icons.Default.CreditCard to "Cartão de Crédito"
-            }
-
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(iconBgColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = iconTint,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -231,7 +347,7 @@ private fun AccountItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = account.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
@@ -242,20 +358,29 @@ private fun AccountItemCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                FinancialMoneyText(
-                    money = item.derivedBalance,
-                    currency = account.currency,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                if (balancesVisible) {
+                    FinancialMoneyText(
+                        money = item.derivedBalance,
+                        currency = account.currency,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                } else {
+                    Text(
+                        text = "••••••",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 if (!account.isArchived) {
                     IconButton(
                         onClick = onArchiveClick,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Archive,
                             contentDescription = "Arquivar conta",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -265,6 +390,9 @@ private fun AccountItemCard(
     }
 }
 
+private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateAccountDialog(
     onDismiss: () -> Unit,
@@ -282,77 +410,111 @@ private fun CreateAccountDialog(
     var selectedType by remember { mutableStateOf(AccountType.CHECKING) }
     var selectedCurrency by remember { mutableStateOf(CurrencyCode.BRL) }
     var initialBalanceStr by remember { mutableStateOf("") }
+    var creditLimitStr by remember { mutableStateOf("") }
+    var closingDayStr by remember { mutableStateOf("10") }
+    var dueDayStr by remember { mutableStateOf("20") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nova Conta") },
+        title = {
+            Text("Nova Conta", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Nome da conta") },
+                    placeholder = { Text("Ex: Nubank, Itaú, Carteira") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Type selector
-                Text("Tipo:", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    listOf(AccountType.CHECKING, AccountType.SAVINGS, AccountType.CASH, AccountType.CREDIT_CARD).forEach { type ->
-                        val isSelected = selectedType == type
-                        Button(
+                Text("Tipo de Conta:", style = MaterialTheme.typography.labelMedium)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    AccountType.entries.forEach { type ->
+                        val label = when (type) {
+                            AccountType.CHECKING -> "Corrente"
+                            AccountType.SAVINGS -> "Poupança"
+                            AccountType.CASH -> "Dinheiro"
+                            AccountType.INVESTMENT -> "Invest."
+                            AccountType.CREDIT_CARD -> "Cartão"
+                        }
+                        FilterChip(
+                            selected = selectedType == type,
                             onClick = { selectedType = type },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = when (type) {
-                                    AccountType.CHECKING -> "CC"
-                                    AccountType.SAVINGS -> "Poup"
-                                    AccountType.CASH -> "Din"
-                                    AccountType.CREDIT_CARD -> "Cart"
-                                    AccountType.INVESTMENT -> "Inv"
-                                },
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+                        )
                     }
                 }
 
-                // Currency selector
-                Text("Moeda:", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CurrencyCode.entries.forEach { curr ->
-                        Button(
-                            onClick = { selectedCurrency = curr },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(curr.code)
-                        }
-                    }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Moeda:", style = MaterialTheme.typography.labelMedium)
+                    FilterChip(
+                        selected = selectedCurrency == CurrencyCode.BRL,
+                        onClick = { selectedCurrency = CurrencyCode.BRL },
+                        label = { Text("BRL (R$)") }
+                    )
+                    FilterChip(
+                        selected = selectedCurrency == CurrencyCode.USD,
+                        onClick = { selectedCurrency = CurrencyCode.USD },
+                        label = { Text("USD ($)") }
+                    )
                 }
 
-                OutlinedTextField(
-                    value = initialBalanceStr,
-                    onValueChange = { initialBalanceStr = it },
-                    label = { Text("Saldo inicial em centavos (ex: 1000 = R$ 10,00)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                if (selectedType != AccountType.CREDIT_CARD) {
+                    OutlinedTextField(
+                        value = initialBalanceStr,
+                        onValueChange = { initialBalanceStr = it.filter { char -> char.isDigit() } },
+                        label = { Text("Saldo Inicial (em centavos)") },
+                        placeholder = { Text("ex: 15000 para R$ 150,00") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = creditLimitStr,
+                        onValueChange = { creditLimitStr = it.filter { char -> char.isDigit() } },
+                        label = { Text("Limite do Cartão (em centavos)") },
+                        placeholder = { Text("ex: 500000 para R$ 5.000,00") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = closingDayStr,
+                            onValueChange = { closingDayStr = it.filter { char -> char.isDigit() } },
+                            label = { Text("Dia Fechamento") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = dueDayStr,
+                            onValueChange = { dueDayStr = it.filter { char -> char.isDigit() } },
+                            label = { Text("Dia Vencimento") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isNotBlank()) {
-                        val initialMinor = initialBalanceStr.toLongOrNull() ?: 0L
-                        val closing = if (selectedType == AccountType.CREDIT_CARD) 15 else null
-                        val due = if (selectedType == AccountType.CREDIT_CARD) 22 else null
-                        onConfirm(name, selectedType, selectedCurrency, initialMinor, null, closing, due)
-                    }
-                }
+                    val initialMinor = initialBalanceStr.toLongOrNull() ?: 0L
+                    val limitMinor = creditLimitStr.toLongOrNull()
+                    val closing = closingDayStr.toIntOrNull()
+                    val due = dueDayStr.toIntOrNull()
+                    onConfirm(name, selectedType, selectedCurrency, initialMinor, limitMinor, closing, due)
+                },
+                enabled = name.isNotBlank()
             ) {
-                Text("Criar")
+                Text("Criar Conta")
             }
         },
         dismissButton = {

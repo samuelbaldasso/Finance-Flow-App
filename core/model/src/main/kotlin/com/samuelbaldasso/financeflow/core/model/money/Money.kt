@@ -33,6 +33,9 @@ value class Money(val amountMinor: Long) : Comparable<Money> {
             return Money(scaled.longValueExact())
         }
     }
+
+    fun format(currency: CurrencyCode = CurrencyCode.BRL, locale: Locale = Locale.getDefault()): String =
+        CurrencedMoney(this, currency).format(locale)
 }
 
 data class CurrencedMoney(

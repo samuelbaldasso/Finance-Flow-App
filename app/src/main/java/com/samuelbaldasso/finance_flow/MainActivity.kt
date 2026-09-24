@@ -43,6 +43,8 @@ import com.samuelbaldasso.financeflow.feature.goals.GoalsViewModel
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryScreen
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryUiEffect
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryViewModel
+import com.samuelbaldasso.financeflow.feature.reports.ReportsScreen
+import com.samuelbaldasso.financeflow.feature.reports.ReportsViewModel
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionsListScreen
 
 enum class AppDestination {
@@ -51,6 +53,7 @@ enum class AppDestination {
     BUDGETS,
     GOALS,
     CARDS,
+    REPORTS,
     NEW_TRANSACTION
 }
 
@@ -108,11 +111,21 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                val reportsViewModel: ReportsViewModel = viewModel {
+                    ReportsViewModel(
+                        container.getCashFlowReportUseCase,
+                        container.transactionRepository,
+                        container.accountRepository,
+                        container.createTransactionUseCase
+                    )
+                }
+
                 val accountsState by accountsViewModel.uiState.collectAsState()
                 val transactionEntryState by transactionEntryViewModel.uiState.collectAsState()
                 val budgetsState by budgetsViewModel.uiState.collectAsState()
                 val goalsState by goalsViewModel.uiState.collectAsState()
                 val cardsState by cardsViewModel.uiState.collectAsState()
+                val reportsState by reportsViewModel.uiState.collectAsState()
 
                 val allTransactions by container.transactionRepository.getAllTransactionsFlow()
                     .collectAsState(initial = emptyList())
@@ -189,6 +202,7 @@ class MainActivity : ComponentActivity() {
                                 TransactionsListScreen(
                                     transactions = allTransactions,
                                     onAddTransactionClick = { currentDestination = AppDestination.NEW_TRANSACTION },
+                                    onOpenReportsClick = { currentDestination = AppDestination.REPORTS },
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }
@@ -211,6 +225,14 @@ class MainActivity : ComponentActivity() {
                                     state = cardsState,
                                     onEvent = cardsViewModel::onEvent,
                                     onNavigateToAccounts = { currentDestination = AppDestination.ACCOUNTS },
+                                    modifier = Modifier.padding(innerPadding)
+                                )
+                            }
+                            AppDestination.REPORTS -> {
+                                ReportsScreen(
+                                    state = reportsState,
+                                    onEvent = reportsViewModel::onEvent,
+                                    onNavigateBack = { currentDestination = AppDestination.TRANSACTIONS },
                                     modifier = Modifier.padding(innerPadding)
                                 )
                             }

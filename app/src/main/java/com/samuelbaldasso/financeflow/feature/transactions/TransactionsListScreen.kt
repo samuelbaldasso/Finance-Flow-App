@@ -59,11 +59,16 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsListScreen(
     transactions: List<Transaction>,
     onAddTransactionClick: () -> Unit,
+    onOpenReportsClick: (() -> Unit)? = null,
     onNavigateBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -98,6 +103,13 @@ fun TransactionsListScreen(
                     if (onNavigateBack != null) {
                         IconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        }
+                    }
+                },
+                actions = {
+                    if (onOpenReportsClick != null) {
+                        IconButton(onClick = onOpenReportsClick) {
+                            Icon(Icons.Default.Analytics, contentDescription = "Relatórios de Fluxo de Caixa")
                         }
                     }
                 }

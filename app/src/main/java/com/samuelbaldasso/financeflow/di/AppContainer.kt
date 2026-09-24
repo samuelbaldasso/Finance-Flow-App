@@ -70,4 +70,10 @@ class AppContainer(private val context: Context) {
     val deleteCategoryUseCase by lazy { DeleteCategoryUseCase(categoryRepository) }
     val createInstallmentPurchaseUseCase by lazy { CreateInstallmentPurchaseUseCase(transactionRepository) }
     val calculateAvailableLimitUseCase by lazy { CalculateAvailableLimitUseCase(transactionRepository) }
+    val getCashFlowReportUseCase by lazy {
+        com.samuelbaldasso.financeflow.domain.usecase.report.GetCashFlowReportUseCase(
+            transactionRepository,
+            categoryRepository
+        )
+    }
 }

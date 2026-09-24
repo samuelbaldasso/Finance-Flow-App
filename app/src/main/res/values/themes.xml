@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- Base application theme. -->
     <style name="Theme.Finance_flow" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Native Splash Screen theme using AndroidX SplashScreen API -->
+    <style name="Theme.FinanceFlow.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Finance_flow</item>
+    </style>
 </resources>

@@ -53,6 +53,7 @@ import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryScree
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryUiEffect
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionEntryViewModel
 import com.samuelbaldasso.financeflow.feature.transactions.TransactionsListScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -70,6 +71,7 @@ enum class AppDestination {
 class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

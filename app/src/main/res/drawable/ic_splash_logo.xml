@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background Circle subtle glow -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M54,54m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0" />
+
+    <!-- Emerald Ring -->
+    <path
+        android:strokeColor="#059669"
+        android:strokeWidth="3"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Upward Trend Flow / Dynamic Financial Waves -->
+    <path
+        android:strokeColor="#34D399"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M32,68 L46,54 L58,62 L76,40" />
+
+    <!-- Arrow Head -->
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M66,38 L78,38 L78,50 Z" />
+
+    <!-- Flow Accent Dot -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M54,28m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

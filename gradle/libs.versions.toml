@@ -16,8 +16,10 @@ navigation = "2.8.7"
 datastore = "1.1.2"
 
 biometric = "1.2.0-alpha05"
+coreSplashScreen = "1.0.1"
 
 [libraries]
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashScreen" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

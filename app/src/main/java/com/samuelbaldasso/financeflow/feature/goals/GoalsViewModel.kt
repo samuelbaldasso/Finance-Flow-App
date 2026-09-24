@@ -18,10 +18,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.ZoneOffset
+import javax.inject.Inject
 
-class GoalsViewModel(
+@HiltViewModel
+class GoalsViewModel @Inject constructor(
     private val goalRepository: GoalRepository,
     private val accountRepository: AccountRepository,
     private val createTransactionUseCase: CreateTransactionUseCase

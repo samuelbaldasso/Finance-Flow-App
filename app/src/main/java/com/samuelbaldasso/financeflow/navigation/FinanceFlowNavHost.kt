@@ -7,12 +7,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.samuelbaldasso.financeflow.di.AppContainer
 import com.samuelbaldasso.financeflow.feature.accounts.AccountsScreen
 import com.samuelbaldasso.financeflow.feature.accounts.AccountsViewModel
 import com.samuelbaldasso.financeflow.feature.budgets.BudgetsScreen
@@ -34,7 +33,6 @@ import com.samuelbaldasso.financeflow.feature.transactions.TransactionsViewModel
 @Composable
 fun FinanceFlowNavHost(
     navController: NavHostController,
-    container: AppContainer,
     innerPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
@@ -44,13 +42,7 @@ fun FinanceFlowNavHost(
         modifier = modifier.padding(innerPadding)
     ) {
         composable<AccountsRoute> {
-            val accountsViewModel: AccountsViewModel = viewModel {
-                AccountsViewModel(
-                    container.getAccountsWithBalanceUseCase,
-                    container.createAccountUseCase,
-                    container.archiveAccountUseCase
-                )
-            }
+            val accountsViewModel: AccountsViewModel = hiltViewModel()
             val state by accountsViewModel.uiState.collectAsState()
             AccountsScreen(
                 state = state,
@@ -59,9 +51,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<TransactionsRoute> {
-            val transactionsViewModel: TransactionsViewModel = viewModel {
-                TransactionsViewModel(container.transactionRepository)
-            }
+            val transactionsViewModel: TransactionsViewModel = hiltViewModel()
             val allTxs by transactionsViewModel.allTransactions.collectAsState()
             val pagedTxs = transactionsViewModel.pagedTransactions.collectAsLazyPagingItems()
 
@@ -74,9 +64,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<BudgetsRoute> {
-            val budgetsViewModel: BudgetsViewModel = viewModel {
-                BudgetsViewModel(container.budgetRepository, container.categoryRepository)
-            }
+            val budgetsViewModel: BudgetsViewModel = hiltViewModel()
             val state by budgetsViewModel.uiState.collectAsState()
             BudgetsScreen(
                 state = state,
@@ -85,9 +73,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<GoalsRoute> {
-            val goalsViewModel: GoalsViewModel = viewModel {
-                GoalsViewModel(container.goalRepository, container.accountRepository, container.createTransactionUseCase)
-            }
+            val goalsViewModel: GoalsViewModel = hiltViewModel()
             val state by goalsViewModel.uiState.collectAsState()
             GoalsScreen(
                 state = state,
@@ -96,16 +82,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<CardsRoute> {
-            val cardsViewModel: CardsViewModel = viewModel {
-                CardsViewModel(
-                    container.accountRepository,
-                    container.transactionRepository,
-                    container.categoryRepository,
-                    container.calculateAvailableLimitUseCase,
-                    container.createInstallmentPurchaseUseCase,
-                    container.createTransactionUseCase
-                )
-            }
+            val cardsViewModel: CardsViewModel = hiltViewModel()
             val state by cardsViewModel.uiState.collectAsState()
             CardsScreen(
                 state = state,
@@ -115,14 +92,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<ReportsRoute> {
-            val reportsViewModel: ReportsViewModel = viewModel {
-                ReportsViewModel(
-                    container.getCashFlowReportUseCase,
-                    container.transactionRepository,
-                    container.accountRepository,
-                    container.createTransactionUseCase
-                )
-            }
+            val reportsViewModel: ReportsViewModel = hiltViewModel()
             val state by reportsViewModel.uiState.collectAsState()
             ReportsScreen(
                 state = state,
@@ -132,14 +102,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<SettingsRoute> {
-            val settingsViewModel: SettingsViewModel = viewModel {
-                SettingsViewModel(
-                    container.securityRepository,
-                    container.exportAllUserDataUseCase,
-                    container.wipeAllUserDataUseCase,
-                    container.appLockManager
-                )
-            }
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
             val state by settingsViewModel.uiState.collectAsState()
             SettingsScreen(
                 state = state,
@@ -149,13 +112,7 @@ fun FinanceFlowNavHost(
         }
 
         composable<NewTransactionRoute> {
-            val transactionEntryViewModel: TransactionEntryViewModel = viewModel {
-                TransactionEntryViewModel(
-                    container.accountRepository,
-                    container.categoryRepository,
-                    container.createTransactionUseCase
-                )
-            }
+            val transactionEntryViewModel: TransactionEntryViewModel = hiltViewModel()
             val state by transactionEntryViewModel.uiState.collectAsState()
 
             LaunchedEffect(Unit) {

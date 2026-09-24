@@ -12,10 +12,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AccountsViewModel(
+@HiltViewModel
+class AccountsViewModel @Inject constructor(
     private val getAccountsWithBalanceUseCase: GetAccountsWithBalanceUseCase,
     private val createAccountUseCase: CreateAccountUseCase,
     private val archiveAccountUseCase: ArchiveAccountUseCase

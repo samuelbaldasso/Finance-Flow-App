@@ -5,8 +5,9 @@ import com.samuelbaldasso.financeflow.domain.repository.CategoryRepository
 import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class WipeAllUserDataUseCase(
+class WipeAllUserDataUseCase @Inject constructor(
     private val database: FinanceFlowDatabase,
     private val securityRepository: SecurityRepository,
     private val categoryRepository: CategoryRepository

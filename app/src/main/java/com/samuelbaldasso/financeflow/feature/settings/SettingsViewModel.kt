@@ -6,20 +6,37 @@ import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
 import com.samuelbaldasso.financeflow.domain.security.AppLockManager
 import com.samuelbaldasso.financeflow.domain.usecase.security.ExportAllUserDataUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.security.WipeAllUserDataUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel internal constructor(
     private val securityRepository: SecurityRepository,
     private val exportAllUserDataUseCase: ExportAllUserDataUseCase,
     private val wipeAllUserDataUseCase: WipeAllUserDataUseCase,
     private val appLockManager: AppLockManager,
-    sharingStarted: SharingStarted = SharingStarted.WhileSubscribed(5_000)
+    sharingStarted: SharingStarted
 ) : ViewModel() {
+
+    @Inject
+    constructor(
+        securityRepository: SecurityRepository,
+        exportAllUserDataUseCase: ExportAllUserDataUseCase,
+        wipeAllUserDataUseCase: WipeAllUserDataUseCase,
+        appLockManager: AppLockManager
+    ) : this(
+        securityRepository = securityRepository,
+        exportAllUserDataUseCase = exportAllUserDataUseCase,
+        wipeAllUserDataUseCase = wipeAllUserDataUseCase,
+        appLockManager = appLockManager,
+        sharingStarted = SharingStarted.WhileSubscribed(5_000)
+    )
 
     private val _showSetPinDialog = MutableStateFlow(false)
     private val _showWipeConfirmDialog = MutableStateFlow(false)

@@ -9,8 +9,9 @@ import com.samuelbaldasso.financeflow.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.ZoneOffset
+import javax.inject.Inject
 
-class GetCashFlowReportUseCase(
+class GetCashFlowReportUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository
 ) {

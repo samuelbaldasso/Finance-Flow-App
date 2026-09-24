@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
+import javax.inject.Inject
 
-class ExportAllUserDataUseCase(
+class ExportAllUserDataUseCase @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,

@@ -6,8 +6,9 @@ import com.samuelbaldasso.financeflow.core.model.transaction.TransactionType
 import com.samuelbaldasso.financeflow.domain.repository.AccountRepository
 import com.samuelbaldasso.financeflow.domain.repository.TransactionRepository
 import java.util.UUID
+import javax.inject.Inject
 
-class CreateTransactionUseCase(
+class CreateTransactionUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository
 ) {

@@ -6,9 +6,10 @@ import com.samuelbaldasso.financeflow.core.model.audit.AuditEvent
 import com.samuelbaldasso.financeflow.domain.repository.AuditRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 import java.util.UUID
 
-class AuditRepositoryImpl(
+class AuditRepositoryImpl @Inject constructor(
     private val auditLogDao: AuditLogDao
 ) : AuditRepository {
 

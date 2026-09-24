@@ -11,9 +11,10 @@ import com.samuelbaldasso.financeflow.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 import java.util.UUID
 
-class CategoryRepositoryImpl(
+class CategoryRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
     private val auditRepository: AuditRepository
 ) : CategoryRepository {

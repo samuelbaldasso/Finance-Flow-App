@@ -5,8 +5,9 @@ import com.samuelbaldasso.financeflow.core.model.account.AccountType
 import com.samuelbaldasso.financeflow.core.model.money.Money
 import com.samuelbaldasso.financeflow.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
 
-class CalculateAvailableLimitUseCase(
+class CalculateAvailableLimitUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(cardAccount: Account): Money {

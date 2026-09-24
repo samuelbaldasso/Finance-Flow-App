@@ -14,10 +14,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class GoalRepositoryImpl(
+class GoalRepositoryImpl @Inject constructor(
     private val goalDao: GoalDao,
     private val transactionDao: TransactionDao
 ) : GoalRepository {

@@ -27,23 +27,31 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.samuelbaldasso.financeflow.FinanceFlowApplication
 import com.samuelbaldasso.financeflow.core.model.settings.SecuritySettings
 import com.samuelbaldasso.financeflow.designsystem.theme.FinanceFlowTheme
+import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
+import com.samuelbaldasso.financeflow.domain.security.AppLockManager
 import com.samuelbaldasso.financeflow.feature.security.LockScreen
 import com.samuelbaldasso.financeflow.navigation.FinanceFlowNavHost
 import com.samuelbaldasso.financeflow.navigation.TopLevelDestination
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : FragmentActivity() {
+
+    @Inject
+    lateinit var appLockManager: AppLockManager
+
+    @Inject
+    lateinit var securityRepository: SecurityRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val container = (application as FinanceFlowApplication).container
 
         setContent {
             FinanceFlowTheme {
@@ -51,8 +59,8 @@ class MainActivity : FragmentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
-                val isLocked by container.appLockManager.isLocked.collectAsState()
-                val securitySettings by container.securityRepository.securitySettingsFlow
+                val isLocked by appLockManager.isLocked.collectAsState()
+                val securitySettings by securityRepository.securitySettingsFlow
                     .collectAsState(initial = SecuritySettings())
 
                 // Manage FLAG_SECURE (Screenshot protection)
@@ -70,14 +78,14 @@ class MainActivity : FragmentActivity() {
                 if (isLocked) {
                     LockScreen(
                         isBiometricAvailable = securitySettings.isBiometricEnabled,
-                        onVerifyPin = { pin -> container.securityRepository.verifyPin(pin) },
+                        onVerifyPin = { pin -> securityRepository.verifyPin(pin) },
                         onBiometricUnlockClick = {
                             showBiometricPrompt(
-                                onSuccess = { container.appLockManager.unlock() },
+                                onSuccess = { appLockManager.unlock() },
                                 onError = { /* fallback to pin */ }
                             )
                         },
-                        onUnlockSuccess = { container.appLockManager.unlock() }
+                        onUnlockSuccess = { appLockManager.unlock() }
                     )
                 } else {
                     val isTopLevelRoute = TopLevelDestination.entries.any { topDest ->
@@ -129,7 +137,6 @@ class MainActivity : FragmentActivity() {
                     ) { innerPadding ->
                         FinanceFlowNavHost(
                             navController = navController,
-                            container = container,
                             innerPadding = innerPadding
                         )
                     }
@@ -140,16 +147,14 @@ class MainActivity : FragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        val container = (application as FinanceFlowApplication).container
-        container.appLockManager.onAppBackgrounded()
+        appLockManager.onAppBackgrounded()
     }
 
     override fun onResume() {
         super.onResume()
-        val container = (application as FinanceFlowApplication).container
         lifecycleScope.launch {
-            val settings = container.securityRepository.securitySettingsFlow.first()
-            container.appLockManager.onAppForegrounded(settings)
+            val settings = securityRepository.securitySettingsFlow.first()
+            appLockManager.onAppForegrounded(settings)
         }
     }
 

@@ -4,8 +4,9 @@ import com.samuelbaldasso.financeflow.core.model.settings.SecuritySettings
 import com.samuelbaldasso.financeflow.data.datastore.SecurityPreferencesDataSource
 import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class SecurityRepositoryImpl(
+class SecurityRepositoryImpl @Inject constructor(
     private val dataSource: SecurityPreferencesDataSource
 ) : SecurityRepository {
 

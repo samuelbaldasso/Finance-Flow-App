@@ -14,12 +14,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class BudgetRepositoryImpl(
+class BudgetRepositoryImpl @Inject constructor(
     private val budgetDao: BudgetDao,
     private val categoryDao: CategoryDao,
     private val transactionDao: TransactionDao

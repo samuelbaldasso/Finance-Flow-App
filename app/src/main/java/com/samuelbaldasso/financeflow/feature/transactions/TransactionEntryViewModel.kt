@@ -15,11 +15,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
+import javax.inject.Inject
 
-class TransactionEntryViewModel(
+@HiltViewModel
+class TransactionEntryViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val categoryRepository: CategoryRepository,
     private val createTransactionUseCase: CreateTransactionUseCase

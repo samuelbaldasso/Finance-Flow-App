@@ -22,11 +22,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.ZoneOffset
 import java.util.UUID
+import javax.inject.Inject
 
+@HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
-class ReportsViewModel(
+class ReportsViewModel @Inject constructor(
     private val getCashFlowReportUseCase: GetCashFlowReportUseCase,
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,

@@ -14,10 +14,11 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 import java.time.Instant
 import java.util.UUID
 
-class TransactionRepositoryImpl(
+class TransactionRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao,
     private val auditRepository: AuditRepository
 ) : TransactionRepository {

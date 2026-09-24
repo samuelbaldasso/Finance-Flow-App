@@ -11,8 +11,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
+import javax.inject.Inject
 
-class CreateInstallmentPurchaseUseCase(
+class CreateInstallmentPurchaseUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(

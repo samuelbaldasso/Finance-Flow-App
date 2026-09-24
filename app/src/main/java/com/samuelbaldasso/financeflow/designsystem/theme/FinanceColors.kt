@@ -17,8 +17,11 @@ val FinanceWarningAmberDark = Color(0xFFFBBF24)
 val FinanceTransferBlue = Color(0xFF2563EB)
 val FinanceTransferBlueDark = Color(0xFF60A5FA)
 
-val NeutralDark = Color(0xFF0F172A)
-val NeutralLight = Color(0xFFF8FAFC)
+val FinanceGreen = FinanceGreenPrimary
+val FinanceRed = FinanceRedExpense
+val FinanceSlate900 = Color(0xFF0F172A)
+val FinanceSlate800 = Color(0xFF1E293B)
+val FinanceSlate700 = Color(0xFF334155)
 
 val BorderSubtleLight = Color(0xFFE2E8F0)
 val BorderSubtleDark = Color(0xFF334155)

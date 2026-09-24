@@ -29,6 +29,10 @@ class BudgetRepositoryImpl(
         return budgetDao.getAllForPeriodFlow(month, year).map { list -> list.map { it.toDomain() } }
     }
 
+    override fun getAllBudgetsFlow(): Flow<List<Budget>> {
+        return budgetDao.getAllBudgetsFlow().map { list -> list.map { it.toDomain() } }
+    }
+
     override fun getBudgetsWithProgressFlow(month: Int, year: Int): Flow<List<BudgetWithProgress>> {
         val startOfMonth = LocalDate.of(year, month, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         val endOfMonth = LocalDate.of(year, month, 1).plusMonths(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() - 1

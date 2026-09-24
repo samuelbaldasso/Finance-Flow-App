@@ -14,12 +14,20 @@ import com.samuelbaldasso.financeflow.domain.repository.BudgetRepository
 import com.samuelbaldasso.financeflow.domain.repository.CategoryRepository
 import com.samuelbaldasso.financeflow.domain.repository.GoalRepository
 import com.samuelbaldasso.financeflow.domain.repository.TransactionRepository
+import com.samuelbaldasso.financeflow.data.datastore.SecurityPreferencesDataSource
+import com.samuelbaldasso.financeflow.data.datastore.securityDataStore
+import com.samuelbaldasso.financeflow.data.repository.SecurityRepositoryImpl
+import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
+import com.samuelbaldasso.financeflow.domain.security.AppLockManager
 import com.samuelbaldasso.financeflow.domain.usecase.account.ArchiveAccountUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.account.CreateAccountUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.account.GetAccountsWithBalanceUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.card.CalculateAvailableLimitUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.card.CreateInstallmentPurchaseUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.category.DeleteCategoryUseCase
+import com.samuelbaldasso.financeflow.domain.usecase.report.GetCashFlowReportUseCase
+import com.samuelbaldasso.financeflow.domain.usecase.security.ExportAllUserDataUseCase
+import com.samuelbaldasso.financeflow.domain.usecase.security.WipeAllUserDataUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.transaction.CreateTransactionUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.transaction.DeleteTransactionUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.transaction.ReconcileTransactionUseCase
@@ -71,8 +79,36 @@ class AppContainer(private val context: Context) {
     val createInstallmentPurchaseUseCase by lazy { CreateInstallmentPurchaseUseCase(transactionRepository) }
     val calculateAvailableLimitUseCase by lazy { CalculateAvailableLimitUseCase(transactionRepository) }
     val getCashFlowReportUseCase by lazy {
-        com.samuelbaldasso.financeflow.domain.usecase.report.GetCashFlowReportUseCase(
+        GetCashFlowReportUseCase(transactionRepository, categoryRepository)
+    }
+
+    val securityPreferencesDataSource by lazy {
+        SecurityPreferencesDataSource(context.securityDataStore)
+    }
+
+    val securityRepository: SecurityRepository by lazy {
+        SecurityRepositoryImpl(securityPreferencesDataSource)
+    }
+
+    val appLockManager: AppLockManager by lazy {
+        AppLockManager()
+    }
+
+    val exportAllUserDataUseCase by lazy {
+        ExportAllUserDataUseCase(
+            accountRepository,
             transactionRepository,
+            categoryRepository,
+            budgetRepository,
+            goalRepository,
+            auditRepository
+        )
+    }
+
+    val wipeAllUserDataUseCase by lazy {
+        WipeAllUserDataUseCase(
+            database,
+            securityRepository,
             categoryRepository
         )
     }

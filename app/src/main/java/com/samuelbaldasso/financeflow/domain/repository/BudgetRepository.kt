@@ -15,6 +15,7 @@ data class BudgetWithProgress(
 
 interface BudgetRepository {
     fun getBudgetsForPeriodFlow(month: Int, year: Int): Flow<List<Budget>>
+    fun getAllBudgetsFlow(): Flow<List<Budget>>
     fun getBudgetsWithProgressFlow(month: Int, year: Int): Flow<List<BudgetWithProgress>>
     suspend fun getBudgetForCategoryAndPeriod(categoryId: UUID, month: Int, year: Int): Budget?
     suspend fun setBudget(budget: Budget)

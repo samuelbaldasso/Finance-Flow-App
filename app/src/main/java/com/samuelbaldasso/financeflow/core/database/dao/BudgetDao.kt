@@ -27,4 +27,7 @@ interface BudgetDao {
 
     @Query("SELECT * FROM budgets WHERE period_month = :month AND period_year = :year")
     fun getAllForPeriodFlow(month: Int, year: Int): Flow<List<BudgetEntity>>
+
+    @Query("SELECT * FROM budgets")
+    fun getAllBudgetsFlow(): Flow<List<BudgetEntity>>
 }

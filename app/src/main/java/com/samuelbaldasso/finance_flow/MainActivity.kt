@@ -218,7 +218,7 @@ class MainActivity : FragmentActivity() {
                                     selected = currentDestination == AppDestination.BUDGETS,
                                     onClick = { currentDestination = AppDestination.BUDGETS },
                                     icon = { Icon(Icons.Default.PieChart, contentDescription = null, modifier = Modifier.size(22.dp)) },
-                                    label = { Text("Orçamentos", style = MaterialTheme.typography.labelSmall) }
+                                    label = { Text("Orçamento", style = MaterialTheme.typography.labelSmall) }
                                 )
                                 NavigationBarItem(
                                     selected = currentDestination == AppDestination.GOALS,

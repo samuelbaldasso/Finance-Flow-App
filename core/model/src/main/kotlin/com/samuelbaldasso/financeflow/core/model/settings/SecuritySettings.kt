@@ -4,7 +4,7 @@ data class SecuritySettings(
     val isPinSet: Boolean = false,
     val isBiometricEnabled: Boolean = false,
     val lockTimeoutMinutes: Int = 1,
-    val isScreenshotProtectionEnabled: Boolean = true,
+    val isScreenshotProtectionEnabled: Boolean = false,
     val telemetryConsent: Boolean = false
 ) {
     val isAppLockEnabled: Boolean

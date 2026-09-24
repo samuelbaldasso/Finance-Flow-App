@@ -41,7 +41,7 @@ class SecurityPreferencesDataSource(
             isPinSet = !pinHash.isNullOrBlank(),
             isBiometricEnabled = prefs[KEY_BIOMETRIC_ENABLED] ?: false,
             lockTimeoutMinutes = prefs[KEY_LOCK_TIMEOUT_MINUTES] ?: 1,
-            isScreenshotProtectionEnabled = prefs[KEY_SCREENSHOT_PROTECTION] ?: true,
+            isScreenshotProtectionEnabled = prefs[KEY_SCREENSHOT_PROTECTION] ?: false,
             telemetryConsent = prefs[KEY_TELEMETRY_CONSENT] ?: false
         )
     }

@@ -35,6 +35,12 @@ abstract class TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY effective_date DESC")
     abstract fun getAllFlow(): Flow<List<TransactionEntity>>
 
+    @Query("SELECT * FROM transactions ORDER BY effective_date DESC")
+    abstract fun getAllPaged(): androidx.paging.PagingSource<Int, TransactionEntity>
+
+    @Query("SELECT * FROM transactions WHERE account_id = :accountId ORDER BY effective_date DESC")
+    abstract fun getByAccountPaged(accountId: UUID): androidx.paging.PagingSource<Int, TransactionEntity>
+
     @Query("SELECT * FROM transactions WHERE transfer_id = :transferId")
     abstract suspend fun getByTransferId(transferId: UUID): List<TransactionEntity>
 

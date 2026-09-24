@@ -8,6 +8,10 @@ import com.samuelbaldasso.financeflow.core.model.transaction.Transaction
 import com.samuelbaldasso.financeflow.core.model.transaction.TransactionStatus
 import com.samuelbaldasso.financeflow.domain.repository.AuditRepository
 import com.samuelbaldasso.financeflow.domain.repository.TransactionRepository
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -22,8 +26,28 @@ class TransactionRepositoryImpl(
         return transactionDao.getAllFlow().map { list -> list.map { it.toDomain() } }
     }
 
+    override fun getTransactionsPagedFlow(pageSize: Int): Flow<PagingData<Transaction>> {
+        return Pager(
+            config = PagingConfig(pageSize = pageSize, enablePlaceholders = false)
+        ) {
+            transactionDao.getAllPaged()
+        }.flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
+    }
+
     override fun getTransactionsByAccountFlow(accountId: UUID): Flow<List<Transaction>> {
         return transactionDao.getByAccountFlow(accountId).map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getTransactionsByAccountPagedFlow(accountId: UUID, pageSize: Int): Flow<PagingData<Transaction>> {
+        return Pager(
+            config = PagingConfig(pageSize = pageSize, enablePlaceholders = false)
+        ) {
+            transactionDao.getByAccountPaged(accountId)
+        }.flow.map { pagingData ->
+            pagingData.map { it.toDomain() }
+        }
     }
 
     override fun getGoalContributionsFlow(goalId: UUID): Flow<List<Transaction>> {

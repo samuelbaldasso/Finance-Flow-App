@@ -63,11 +63,16 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsListScreen(
     transactions: List<Transaction>,
     onAddTransactionClick: () -> Unit,
+    pagedTransactions: LazyPagingItems<Transaction>? = null,
     onOpenReportsClick: (() -> Unit)? = null,
     onNavigateBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -174,7 +179,14 @@ fun TransactionsListScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (filteredTransactions.isEmpty()) {
+            val isUsingPaging = pagedTransactions != null && selectedFilter == null
+            val isListEmpty = if (isUsingPaging) {
+                pagedTransactions.itemCount == 0
+            } else {
+                filteredTransactions.isEmpty()
+            }
+
+            if (isListEmpty) {
                 FinancialEmptyState(
                     title = "Nenhuma transação encontrada",
                     description = "Registre receitas, despesas e transferências com cálculo automático de saldos.",
@@ -187,12 +199,25 @@ fun TransactionsListScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(
-                        items = filteredTransactions,
-                        key = { it.id },
-                        contentType = { "transaction_item" }
-                    ) { tx ->
-                        TransactionItemCard(transaction = tx)
+                    if (isUsingPaging) {
+                        items(
+                            count = pagedTransactions.itemCount,
+                            key = pagedTransactions.itemKey { it.id },
+                            contentType = pagedTransactions.itemContentType { "transaction_item" }
+                        ) { index ->
+                            val tx = pagedTransactions[index]
+                            if (tx != null) {
+                                TransactionItemCard(transaction = tx)
+                            }
+                        }
+                    } else {
+                        items(
+                            items = filteredTransactions,
+                            key = { it.id },
+                            contentType = { "transaction_item" }
+                        ) { tx ->
+                            TransactionItemCard(transaction = tx)
+                        }
                     }
                 }
             }

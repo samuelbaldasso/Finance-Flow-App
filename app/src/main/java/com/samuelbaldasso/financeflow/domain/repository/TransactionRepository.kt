@@ -6,7 +6,9 @@ import java.util.UUID
 
 interface TransactionRepository {
     fun getAllTransactionsFlow(): Flow<List<Transaction>>
+    fun getTransactionsPagedFlow(pageSize: Int = 20): Flow<androidx.paging.PagingData<Transaction>>
     fun getTransactionsByAccountFlow(accountId: UUID): Flow<List<Transaction>>
+    fun getTransactionsByAccountPagedFlow(accountId: UUID, pageSize: Int = 20): Flow<androidx.paging.PagingData<Transaction>>
     fun getGoalContributionsFlow(goalId: UUID): Flow<List<Transaction>>
     suspend fun getTransactionById(id: UUID): Transaction?
     suspend fun getTransactionsByTransferId(transferId: UUID): List<Transaction>

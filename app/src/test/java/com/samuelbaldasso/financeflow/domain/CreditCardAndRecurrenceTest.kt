@@ -92,7 +92,9 @@ class CreditCardAndRecurrenceTest {
 
         val fakeRepo = object : TransactionRepository {
             override fun getAllTransactionsFlow(): Flow<List<Transaction>> = flowOf(savedTransactions)
+            override fun getTransactionsPagedFlow(pageSize: Int): Flow<androidx.paging.PagingData<Transaction>> = flowOf(androidx.paging.PagingData.from(savedTransactions))
             override fun getTransactionsByAccountFlow(accountId: UUID): Flow<List<Transaction>> = flowOf(savedTransactions)
+            override fun getTransactionsByAccountPagedFlow(accountId: UUID, pageSize: Int): Flow<androidx.paging.PagingData<Transaction>> = flowOf(androidx.paging.PagingData.from(savedTransactions))
             override fun getGoalContributionsFlow(goalId: UUID): Flow<List<Transaction>> = flowOf(emptyList())
             override suspend fun getTransactionById(id: UUID): Transaction? = savedTransactions.find { it.id == id }
             override suspend fun getTransactionsByTransferId(transferId: UUID): List<Transaction> = emptyList()

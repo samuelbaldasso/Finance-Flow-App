@@ -1,8 +1,8 @@
 # FinanceFlow 💳📊
 
 <p align="center">
-  <strong>Aplicativo de Gestão Financeira Pessoal e PJ para Android Nativo</strong><br>
-  <em>Projeto de portfólio Android com Kotlin, Jetpack Compose, persistência local, regras financeiras e testes.</em>
+  <strong>Native Android Finance Management for Individuals and Small Businesses</strong><br>
+  <em>An Android portfolio project built with Kotlin, Jetpack Compose, local persistence, financial domain rules, and tests.</em>
 </p>
 
 <p align="center">
@@ -17,171 +17,177 @@
 
 ---
 
-## 📱 Visão Geral & Demonstração Visual
+## 📱 Overview and Screenshots
 
-O **FinanceFlow** é um aplicativo financeiro de alta criticidade desenvolvido com foco em precisão monetária, privacidade e experiência fluida no ecossistema Android.
+**FinanceFlow** is a finance management app focused on monetary precision, privacy, and a smooth Android experience.
 
-### Galeria de Telas
+### Screen Gallery
 
 <p align="center">
-  <img src="docs/screenshots/01_accounts_screen.png" width="30%" alt="Patrimônio e Contas" />
-  <img src="docs/screenshots/07_create_account_dialog.png" width="30%" alt="Modal Nova Conta" />
-  <img src="docs/screenshots/02_transactions_screen.png" width="30%" alt="Extrato com Paging 3" />
+  <img src="docs/screenshots/01_accounts_screen.png" width="30%" alt="Net Worth and Accounts" />
+  <img src="docs/screenshots/07_create_account_dialog.png" width="30%" alt="Create Account Dialog" />
+  <img src="docs/screenshots/02_transactions_screen.png" width="30%" alt="Transaction History with Paging 3" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/03_budgets_screen.png" width="30%" alt="Orçamentos" />
-  <img src="docs/screenshots/04_goals_screen.png" width="30%" alt="Metas de Economia" />
-  <img src="docs/screenshots/06_settings_screen.png" width="30%" alt="Segurança e LGPD" />
+  <img src="docs/screenshots/03_budgets_screen.png" width="30%" alt="Budgets" />
+  <img src="docs/screenshots/04_goals_screen.png" width="30%" alt="Savings Goals" />
+  <img src="docs/screenshots/06_settings_screen.png" width="30%" alt="Security and Privacy Settings" />
 </p>
 
 ---
 
-## 🏛️ Princípios de Arquitetura & Engenharia
+## 🏛️ Architecture and Engineering Principles
 
-O projeto foi concebido sob princípios rigorosos de **Clean Architecture**, **DDD (Domain-Driven Design)** e **UDF (Unidirectional Data Flow)**:
+The project draws on **Clean Architecture**, **DDD (Domain-Driven Design)**, and **UDF (Unidirectional Data Flow)** principles:
 
-```
-┌────────────────────────────────────────────────────────┐
-│                   Camada de UI (Compose)               │
-│  - Stateless Composables, State Hoisting, Material 3   │
-│  - Navigation Compose 2.8+ com Type-Safe Routes        │
-│  - Paging 3 (LazyPagingItems) para Extrato Escalável   │
-└───────────────────────────┬────────────────────────────┘
-                            │ Dispara UiEvent / Observa StateFlow<UiState>
-┌───────────────────────────▼────────────────────────────┐
-│                  Camada de Apresentação                │
-│  - ViewModels (@HiltViewModel)                         │
-│  - Channels para efeitos únicos (UiEffect)             │
-└───────────────────────────┬────────────────────────────┘
-                            │ Executa
-┌───────────────────────────▼────────────────────────────┐
-│                    Camada de Domínio                   │
-│  - UseCases puros com Single Responsibility Principle  │
-│  - Modelos de Domínio Imutáveis (sem dependência de SO)│
-│  - Value Class Money (cálculos exatos em centavos)    │
-│  - Regras de negócio de Cartão, Recorrência e Orçamento│
-└───────────────────────────┬────────────────────────────┘
-                            │ Solicita dados
-┌───────────────────────────▼────────────────────────────┐
-│                    Camada de Dados                     │
-│  - Repositórios (@Singleton via Hilt)                  │
-│  - Room Database (Offline-First / Single Source of Truth)│
-│  - Preferences DataStore (Credenciais e Configurações) │
-│  - Trilha de Auditoria Imutável (audit_logs)          │
-└────────────────────────────────────────────────────────┘
+```text
+┌────────────────────────────────────────────────────────────┐
+│                     UI Layer (Compose)                     │
+│  - Stateless composables, state hoisting, Material 3        │
+│  - Navigation Compose with type-safe routes                │
+│  - Paging 3 (LazyPagingItems) for transaction history       │
+└─────────────────────────────┬──────────────────────────────┘
+                              │ Sends events / observes state
+┌─────────────────────────────▼──────────────────────────────┐
+│                     Presentation Layer                     │
+│  - ViewModels (@HiltViewModel)                             │
+│  - StateFlow for UI state, Channels for one-time effects   │
+└─────────────────────────────┬──────────────────────────────┘
+                              │ Executes use cases
+┌─────────────────────────────▼──────────────────────────────┐
+│                        Domain Layer                        │
+│  - Use cases for financial and privacy operations          │
+│  - Immutable domain models in the core:model module        │
+│  - Money value class with exact integer arithmetic         │
+│  - Credit card, recurrence, and budget rules               │
+└─────────────────────────────┬──────────────────────────────┘
+                              │ Requests data
+┌─────────────────────────────▼──────────────────────────────┐
+│                         Data Layer                         │
+│  - Repositories wired through Hilt                        │
+│  - Room Database as the local source of truth              │
+│  - Preferences DataStore for credentials and settings      │
+│  - Audit history in audit_logs                             │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚖️ Regras de Negócio & Integridade Financeira (Fonte da Verdade)
+## ⚖️ Business Rules and Financial Integrity
 
-1. **Precisão Monetária Absoluta (§3.1):**
-   - **Zero floats/doubles:** Todos os valores financeiros são expressos em centavos inteiros (`Long`) através da `@JvmInline value class Money(val amountMinor: Long)`.
-   - Arredondamento bancário centralizado (`RoundingMode.HALF_EVEN`).
-   - Operações multi-moeda não convertem silenciosamente: exigem conversor explícito com taxa e data.
+1. **Monetary Precision:**
+   - Monetary amounts use integer minor units (`Long`) through `@JvmInline value class Money(val amountMinor: Long)` instead of floating-point storage.
+   - Conversion from major units uses banker's rounding (`RoundingMode.HALF_EVEN`).
+   - Operations across currencies require an explicit exchange rate and date rather than implicit conversion.
 
-2. **Contas com Saldo Derivado (§3.2):**
-   - O saldo de uma conta nunca é editado diretamente; ele é estritamente derivado da soma do saldo inicial com suas transações efetivadas.
-   - Contas com transações não podem ser excluídas: apenas **arquivadas** (soft-delete). Contas arquivadas não aceitam novos lançamentos.
+2. **Derived Account Balances:**
+   - An account's available balance is derived from its initial balance and cleared or reconciled transactions. Pending transactions are excluded.
+   - Accounts with transactions are archived rather than deleted. Archived accounts do not accept new entries.
 
-3. **Transferências Atômicas (§3.3):**
-   - Transferências entre contas criam um par atômico (débito na origem + crédito no destino vinculados pelo mesmo `transferId`) persistido em bloco `@Transaction`. Alterar ou deletar uma perna propaga atomicamente para a outra.
+3. **Atomic Transfers:**
+   - A transfer creates a debit and a credit linked by the same `transferId`. Both entries and their audit events are persisted in a Room transaction.
+   - Changes and deletion propagate atomically to the counterpart. Transfers require distinct accounts using the same currency.
 
-4. **Ciclo de Cartão de Crédito e Parcelamento (§3.7):**
-   - Suporte a dia de fechamento e dia de vencimento. Compras após o fechamento caem na fatura subsequente.
-   - Compras parceladas geram N parcelas vinculadas (`installmentGroupId`) distribuídas sem perda de centavos residuais na divisão.
+4. **Credit Card Billing Cycles and Installments:**
+   - Billing cycles use closing and due dates. Purchases after the closing date belong to the next billing cycle.
+   - Installment purchases create linked entries (`installmentGroupId`), distributing remaining minor units without losing cents.
 
-5. **Auditoria Contínua (§3.3):**
-   - Mutações de contas, categorias e transações são gravadas na tabela imutável `audit_logs` com timestamp UTC e payload de auditoria.
+5. **Audit History:**
+   - Account, category, and transaction mutations record audit events with UTC timestamps in `audit_logs`.
+   - These mutations and their audit events share the same database transaction.
 
-6. **Privacidade e LGPD (§3.11):**
-   - Recursos de controle de dados e privacidade:
-     - **Portabilidade:** Exportação em JSON de todos os registros do banco e das preferências públicas de segurança, sem truncar a auditoria. Credenciais e arquivos de anexos não são incluídos.
-     - **Direito ao Esquecimento:** Exclusão das tabelas e preferências com intenção persistida e retomada na inicialização após falhas. Room e DataStore não compartilham uma transação; as categorias padrão são recriadas.
-     - **FLAG_SECURE:** Bloqueio de capturas de tela e ocultação dos dados no alternador de apps.
-     - **AppLock & Biometria:** Bloqueio automático por tempo de background com suporte a Biometria (`BiometricPrompt`) e PIN com Hash `SHA-256` salgado.
+6. **Privacy and Data Controls:**
+   - **Data export:** JSON export includes all database records and public security preferences without truncating audit history. Credentials and attachment files are excluded.
+   - **Data deletion:** A persistent deletion intent allows cleanup to resume at startup after a failure. Room and DataStore do not share a transaction; default categories are recreated.
+   - **Screen privacy:** Optional `FLAG_SECURE` protection blocks screenshots and hides financial data in the recent apps preview.
+   - **App lock and biometrics:** Configurable background timeouts, biometric authentication through `BiometricPrompt`, and PIN verification using a salted `SHA-256` hash.
 
 ---
 
-## 📑 Registros de Decisões de Arquitetura (ADRs)
+## 📑 Architecture Decision Records (ADRs)
 
-Todas as decisões arquiteturais foram formalizadas em ADRs concisos:
+The following ADRs document key architectural decisions:
 
-| ADR | Título | Status |
+| ADR | Title | Status |
 |:---:|:---|:---:|
-| [ADR-001](docs/adr/ADR-001-money-representation.md) | Representação Monetária em Centavos (`Long`) e Value Class `Money` | Aceito |
-| [ADR-002](docs/adr/ADR-002-offline-first-room.md) | Arquitetura Offline-First com Room Database como Fonte Única da Verdade | Aceito |
-| [ADR-003](docs/adr/ADR-003-navigation-compose-type-safe.md) | Type-Safe Navigation Compose 2.8+ com Rotas Serializáveis | Aceito |
-| [ADR-004](docs/adr/ADR-004-dependency-injection-hilt.md) | Injeção de Dependências com Dagger Hilt | Aceito |
-| [ADR-005](docs/adr/ADR-005-paging-3-scalability.md) | Paginação Reativa com AndroidX Paging 3 para Escalabilidade de Extratos | Aceito |
-| [ADR-006](docs/adr/ADR-006-mobile-security-and-lgpd.md) | Segurança em Camadas (Biometria, PIN Salgado, FLAG_SECURE e LGPD) | Aceito |
-| [ADR-007](docs/adr/ADR-007-data-integrity-and-recovery.md) | Integridade, migração sem perda e recuperação de exclusão | Aceito |
+| [ADR-001](docs/adr/ADR-001-money-representation.md) | Integer Minor Units (`Long`) and the `Money` Value Class | Accepted |
+| [ADR-002](docs/adr/ADR-002-offline-first-room.md) | Offline-First Architecture with Room as the Source of Truth | Accepted |
+| [ADR-003](docs/adr/ADR-003-navigation-compose-type-safe.md) | Type-Safe Navigation Compose with Serializable Routes | Accepted |
+| [ADR-004](docs/adr/ADR-004-dependency-injection-hilt.md) | Dependency Injection with Dagger Hilt | Accepted |
+| [ADR-005](docs/adr/ADR-005-paging-3-scalability.md) | Reactive Transaction Pagination with AndroidX Paging 3 | Accepted |
+| [ADR-006](docs/adr/ADR-006-mobile-security-and-lgpd.md) | Layered Security: Biometrics, Salted PIN, Screen Protection, and Privacy | Accepted |
+| [ADR-007](docs/adr/ADR-007-data-integrity-and-recovery.md) | Data Integrity, Data-Preserving Migration, and Deletion Recovery | Accepted |
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Technology Stack
 
-- **Linguagem:** Kotlin 2.2.10
+- **Language:** Kotlin 2.2.10
 - **UI:** Jetpack Compose (BOM 2026.02.01), Material 3, Material Icons Extended
-- **Navegação:** AndroidX Navigation Compose 2.8.7 (Type-Safe Routes via `kotlinx.serialization`)
-- **Injeção de Dependências:** Dagger Hilt 2.60.1 + KSP
-- **Banco de Dados Local:** Room 2.7.2 + Room Paging
-- **Paginação:** AndroidX Paging 3 (Paging Compose 3.3.6)
-- **Preferências:** AndroidX DataStore Preferences 1.1.2
-- **Segurança & Biometria:** AndroidX Biometric 1.2.0-alpha05, SHA-256 + Salt
-- **Splash Screen:** AndroidX Core SplashScreen 1.0.1
-- **Assincronia:** Coroutines 1.9.0 + StateFlow / SharedFlow / Channels
-- **Testes:** JUnit 4, Kotlinx Coroutines Test, Robolectric 4.14.1, CashApp Turbine 1.2.1
+- **Navigation:** AndroidX Navigation Compose 2.8.7 with type-safe routes via `kotlinx.serialization`
+- **Dependency injection:** Dagger Hilt 2.60.1 + KSP
+- **Local database:** Room 2.7.2 + Room Paging
+- **Pagination:** AndroidX Paging 3 (Paging Compose 3.3.6)
+- **Preferences:** AndroidX DataStore Preferences 1.1.2
+- **Security and biometrics:** AndroidX Biometric 1.2.0-alpha05, SHA-256 + salt
+- **Splash screen:** AndroidX Core SplashScreen 1.0.1
+- **Asynchronous programming:** Coroutines 1.9.0 + StateFlow / SharedFlow / Channels
+- **Testing:** JUnit 4, Kotlinx Coroutines Test, Robolectric 4.14.1, CashApp Turbine 1.2.1
 
 ---
 
-## 🧪 Suíte de Testes
+## 🧪 Tests
 
-O projeto conta com ampla cobertura de testes unitários de regras de domínio, viewmodels e conciliação bancária:
+The test suite covers domain rules, ViewModels, database behavior, and transaction reconciliation.
 
 ```bash
-# Executar todos os testes unitários
+# Run all unit tests
 ./gradlew test
 
-# Gerar APK de debug
+# Build the debug APK
 ./gradlew assembleDebug
 ```
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🚀 Getting Started
 
-1. Clone o repositório:
+1. Clone the repository:
+
    ```bash
    git clone https://github.com/samuelbaldasso/Finance-Flow-App.git
    cd Finance-Flow-App
    ```
-2. Abra o projeto no **Android Studio** (Ladybug / Meerkat ou superior com suporte a JDK 21).
-3. Aguarde o Gradle Sync.
-4. Execute no emulador ou dispositivo físico (`minSdk = 26`, `targetSdk = 36`).
+
+2. Open the project in **Android Studio** with support for the project's Android Gradle Plugin and JDK 21.
+3. Wait for Gradle sync to complete.
+4. Run the app on an emulator or physical device (`minSdk = 26`, `targetSdk = 36`).
 
 ---
 
-## 👤 Autor
+## Validation and Database Evolution
 
-**Samuel Baldasso**  
-- GitHub: [@samuelbaldasso](https://github.com/samuelbaldasso)
-- E-mail: baldassosamuel93@gmail.com
+The workflow in [`.github/workflows/android.yml`](.github/workflows/android.yml) runs unit tests, Android Lint, and a debug build for pull requests and pushes to `main` or `master`.
 
-## Validação e evolução
+The database is at version 2. Migration 1 → 2 adds an account/status index while preserving existing records. Missing migrations fail explicitly; there is no destructive fallback. Exported schemas are stored in `app/schemas`.
 
-A pipeline em `.github/workflows/android.yml` executa testes, Android Lint e build de debug em cada pull request e push para `main`/`master`.
-
-O banco está na versão 2. A migração 1 → 2 adiciona um índice de conta/status preservando os registros existentes. Migrações ausentes falham explicitamente: não há fallback que apague dados. Os schemas exportados ficam em `app/schemas`.
-
-Para reproduzir as verificações:
+To reproduce the validation steps locally:
 
 ```bash
 ./gradlew :core:model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
-Os testes de regressão verificam rollback de operação e auditoria, saldos sem pendências, migração com dados existentes, exportação acima de mil eventos e retomada da exclusão após falha.
+Regression tests cover rollback of financial operations and audit events, balances excluding pending transactions, migration with existing data, export of more than a thousand audit events, and deletion recovery after a failure.
 
-### Limites atuais
+### Current Limitations
 
-O app armazena dados localmente, sem sincronização remota. A existência de exportação, bloqueio e exclusão não constitui certificação jurídica ou de segurança. A exportação preserva referências a anexos, mas não empacota seus arquivos. O gerenciamento de faturas e a recorrência ainda precisam de evolução para uma operação de produção completa.
+The app stores data locally and does not provide remote synchronization. Export, app locking, and data deletion features do not constitute legal or security certification, including compliance with Brazil's LGPD data protection law. Exports preserve attachment references but do not bundle the files. Invoice management and recurrence still need further development for a complete production workflow.
+
+---
+
+## 👤 Author
+
+**Samuel Baldasso**
+
+- GitHub: [@samuelbaldasso](https://github.com/samuelbaldasso)
+- Email: baldassosamuel93@gmail.com

@@ -61,9 +61,9 @@ class TransactionEntryViewModelTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
 
         createTransactionUseCase = CreateTransactionUseCase(
             transactionRepository = transactionRepo,

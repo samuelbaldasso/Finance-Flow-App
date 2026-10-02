@@ -69,9 +69,9 @@ class SettingsViewModelTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
         budgetRepo = BudgetRepositoryImpl(db.budgetDao(), db.categoryDao(), db.transactionDao())
         goalRepo = GoalRepositoryImpl(db.goalDao(), db.transactionDao())
 
@@ -80,7 +80,7 @@ class SettingsViewModelTest {
         appLockManager = AppLockManager()
 
         exportAllUserDataUseCase = ExportAllUserDataUseCase(
-            accountRepo, transactionRepo, categoryRepo, budgetRepo, goalRepo, auditRepo
+            accountRepo, transactionRepo, categoryRepo, budgetRepo, goalRepo, auditRepo, db, securityRepo
         )
         wipeAllUserDataUseCase = WipeAllUserDataUseCase(db, securityRepo, categoryRepo)
 
@@ -177,6 +177,7 @@ class SettingsViewModelTest {
         val afterWipeState = viewModel.uiState.first { !it.showWipeConfirmDialog && it.userFeedbackMessage != null }
         assertFalse(afterWipeState.showWipeConfirmDialog)
         assertNotNull(afterWipeState.userFeedbackMessage)
-        assertTrue(afterWipeState.userFeedbackMessage!!.contains("LGPD"))
+        assertEquals("Seus dados foram excluídos.", afterWipeState.userFeedbackMessage)
+        assertNull(afterWipeState.exportedDataJson)
     }
 }

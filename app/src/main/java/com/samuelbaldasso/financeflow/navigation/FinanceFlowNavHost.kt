@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,7 +43,7 @@ fun FinanceFlowNavHost(
     ) {
         composable<AccountsRoute> {
             val accountsViewModel: AccountsViewModel = hiltViewModel()
-            val state by accountsViewModel.uiState.collectAsState()
+            val state by accountsViewModel.uiState.collectAsStateWithLifecycle()
             AccountsScreen(
                 state = state,
                 onEvent = accountsViewModel::onEvent
@@ -52,7 +52,7 @@ fun FinanceFlowNavHost(
 
         composable<TransactionsRoute> {
             val transactionsViewModel: TransactionsViewModel = hiltViewModel()
-            val allTxs by transactionsViewModel.allTransactions.collectAsState()
+            val allTxs by transactionsViewModel.allTransactions.collectAsStateWithLifecycle()
             val pagedTxs = transactionsViewModel.pagedTransactions.collectAsLazyPagingItems()
 
             TransactionsListScreen(
@@ -65,7 +65,7 @@ fun FinanceFlowNavHost(
 
         composable<BudgetsRoute> {
             val budgetsViewModel: BudgetsViewModel = hiltViewModel()
-            val state by budgetsViewModel.uiState.collectAsState()
+            val state by budgetsViewModel.uiState.collectAsStateWithLifecycle()
             BudgetsScreen(
                 state = state,
                 onEvent = budgetsViewModel::onEvent
@@ -74,7 +74,7 @@ fun FinanceFlowNavHost(
 
         composable<GoalsRoute> {
             val goalsViewModel: GoalsViewModel = hiltViewModel()
-            val state by goalsViewModel.uiState.collectAsState()
+            val state by goalsViewModel.uiState.collectAsStateWithLifecycle()
             GoalsScreen(
                 state = state,
                 onEvent = goalsViewModel::onEvent
@@ -83,7 +83,7 @@ fun FinanceFlowNavHost(
 
         composable<CardsRoute> {
             val cardsViewModel: CardsViewModel = hiltViewModel()
-            val state by cardsViewModel.uiState.collectAsState()
+            val state by cardsViewModel.uiState.collectAsStateWithLifecycle()
             CardsScreen(
                 state = state,
                 onEvent = cardsViewModel::onEvent,
@@ -93,7 +93,7 @@ fun FinanceFlowNavHost(
 
         composable<ReportsRoute> {
             val reportsViewModel: ReportsViewModel = hiltViewModel()
-            val state by reportsViewModel.uiState.collectAsState()
+            val state by reportsViewModel.uiState.collectAsStateWithLifecycle()
             ReportsScreen(
                 state = state,
                 onEvent = reportsViewModel::onEvent,
@@ -103,7 +103,7 @@ fun FinanceFlowNavHost(
 
         composable<SettingsRoute> {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
-            val state by settingsViewModel.uiState.collectAsState()
+            val state by settingsViewModel.uiState.collectAsStateWithLifecycle()
             SettingsScreen(
                 state = state,
                 onEvent = settingsViewModel::onEvent,
@@ -113,7 +113,7 @@ fun FinanceFlowNavHost(
 
         composable<NewTransactionRoute> {
             val transactionEntryViewModel: TransactionEntryViewModel = hiltViewModel()
-            val state by transactionEntryViewModel.uiState.collectAsState()
+            val state by transactionEntryViewModel.uiState.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
                 transactionEntryViewModel.effect.collect { effect ->

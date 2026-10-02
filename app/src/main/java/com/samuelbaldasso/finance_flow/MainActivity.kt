@@ -6,11 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import com.samuelbaldasso.financeflow.FinanceFlowApplication
+import com.samuelbaldasso.financeflow.StartupState
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +64,22 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             FinanceFlowTheme {
+                val app = application as FinanceFlowApplication
+                val startupState by app.startupState.collectAsState()
+                if (startupState != StartupState.READY) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (startupState == StartupState.ERROR) {
+                                Text("Não foi possível preparar seus dados.")
+                                Button(onClick = app::initialize) { Text("Tentar novamente") }
+                            } else {
+                                CircularProgressIndicator()
+                                Text("Preparando seu FinanceFlow")
+                            }
+                        }
+                    }
+                    return@FinanceFlowTheme
+                }
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
@@ -97,7 +122,7 @@ class MainActivity : FragmentActivity() {
                             if (isTopLevelRoute || currentDestination == null) {
                                 NavigationBar(
                                     containerColor = MaterialTheme.colorScheme.surface,
-                                    tonalElevation = 8.dp
+                                    tonalElevation = 0.dp
                                 ) {
                                     TopLevelDestination.entries.forEach { topDest ->
                                         val isSelected = currentDestination?.hierarchy?.any {
@@ -106,6 +131,11 @@ class MainActivity : FragmentActivity() {
 
                                         NavigationBarItem(
                                             selected = isSelected,
+                                            colors = NavigationBarItemDefaults.colors(
+                                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                            ),
                                             onClick = {
                                                 navController.navigate(topDest.route) {
                                                     popUpTo(navController.graph.findStartDestination().id) {

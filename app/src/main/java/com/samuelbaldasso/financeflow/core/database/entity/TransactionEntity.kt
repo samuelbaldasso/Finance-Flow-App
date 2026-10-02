@@ -34,7 +34,8 @@ import java.util.UUID
         Index(value = ["transfer_id"]),
         Index(value = ["installment_group_id"]),
         Index(value = ["effective_date"]),
-        Index(value = ["status"])
+        Index(value = ["status"]),
+        Index(value = ["account_id", "status"])
     ]
 )
 data class TransactionEntity(

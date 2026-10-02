@@ -1,5 +1,7 @@
 package com.samuelbaldasso.financeflow.feature.settings
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,11 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -103,11 +103,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
-                        text = "Configurações & Segurança",
+                        text = "Ajustes",
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
@@ -116,17 +117,17 @@ fun SettingsScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Voltar",
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = FinanceSlate900
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = FinanceSlate900,
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -134,7 +135,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Section 1: Security
@@ -152,12 +153,12 @@ fun SettingsScreen(
                             text = "Código PIN de Acesso",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = if (state.securitySettings.isPinSet) "Ativado (4 dígitos)" else "Não configurado",
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (state.securitySettings.isPinSet) FinanceGreen else Color.White.copy(alpha = 0.6f)
+                            color = if (state.securitySettings.isPinSet) FinanceGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
 
@@ -172,14 +173,14 @@ fun SettingsScreen(
                         }
                         Button(
                             onClick = { onEvent(SettingsUiEvent.OpenSetPinDialog) },
-                            colors = ButtonDefaults.buttonColors(containerColor = FinanceSlate700)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Text(if (state.securitySettings.isPinSet) "Alterar" else "Definir PIN")
                         }
                     }
                 }
 
-                HorizontalDivider(color = FinanceSlate700.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
                 // Biometrics toggle
                 Row(
@@ -194,25 +195,25 @@ fun SettingsScreen(
                             text = "Desbloqueio por Biometria",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Usar impressão digital ou reconhecimento facial",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     Switch(
                         checked = state.securitySettings.isBiometricEnabled,
                         onCheckedChange = { onEvent(SettingsUiEvent.ToggleBiometric(it)) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = FinanceGreen
                         )
                     )
                 }
 
-                HorizontalDivider(color = FinanceSlate700.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
                 // Lock Timeout
                 Column(
@@ -224,12 +225,12 @@ fun SettingsScreen(
                         text = "Tempo para Bloqueio Automático",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Bloquear o app após período em segundo plano",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -255,20 +256,20 @@ fun SettingsScreen(
                                 onClick = { onEvent(SettingsUiEvent.ChangeLockTimeout(minutes)) },
                                 colors = RadioButtonDefaults.colors(
                                     selectedColor = FinanceGreen,
-                                    unselectedColor = Color.White.copy(alpha = 0.6f)
+                                    unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = label,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 }
 
-                HorizontalDivider(color = FinanceSlate700.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
                 // Screenshot protection (FLAG_SECURE)
                 Row(
@@ -280,22 +281,22 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Proteção de Tela (FLAG_SECURE)",
+                            text = "Privacidade da tela",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Bloqueia capturas de tela e oculta dados financeiros no alternador de tarefas",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     Switch(
                         checked = state.securitySettings.isScreenshotProtectionEnabled,
                         onCheckedChange = { onEvent(SettingsUiEvent.ToggleScreenshotProtection(it)) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = FinanceGreen
                         )
                     )
@@ -305,9 +306,9 @@ fun SettingsScreen(
             // Section 2: Privacy & LGPD
             SettingsSectionCard(title = "Privacidade & Conformidade (LGPD)", icon = Icons.Default.PrivacyTip) {
                 Text(
-                    text = "O FinanceFlow segue rigorosamente a Lei Geral de Proteção de Dados (LGPD). Todos os seus dados financeiros são processados e armazenados exclusivamente no dispositivo (offline-first). Não transmitimos dados de identificação pessoal (PII).",
+                    text = "Seus dados financeiros ficam neste aparelho. Você pode exportar seus registros ou excluir os dados a qualquer momento.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.75f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -324,25 +325,25 @@ fun SettingsScreen(
                             text = "Consentimento para Telemetria",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Permitir envio anônimo de relatórios de falha sem dados financeiros",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     Switch(
                         checked = state.securitySettings.telemetryConsent,
                         onCheckedChange = { onEvent(SettingsUiEvent.ToggleTelemetryConsent(it)) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = FinanceGreen
                         )
                     )
                 }
 
-                HorizontalDivider(color = FinanceSlate700.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
                 // Portability (Export)
                 Row(
@@ -357,17 +358,17 @@ fun SettingsScreen(
                             text = "Portabilidade dos Dados",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Exportar todos os registros em JSON estruturado (Art. 18 LGPD)",
+                            text = "Salvar uma cópia dos seus registros. Arquivos de anexos não são incluídos.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     Button(
                         onClick = { onEvent(SettingsUiEvent.ExportAllData) },
-                        colors = ButtonDefaults.buttonColors(containerColor = FinanceSlate700)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
@@ -375,7 +376,7 @@ fun SettingsScreen(
                     }
                 }
 
-                HorizontalDivider(color = FinanceSlate700.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
 
                 // Right to be forgotten (Wipe)
                 Row(
@@ -395,7 +396,7 @@ fun SettingsScreen(
                         Text(
                             text = "Excluir permanentemente todas as contas, transações e redefinir o app",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                     Button(
@@ -415,24 +416,24 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Versão", color = Color.White.copy(alpha = 0.7f))
-                    Text(text = "1.0.0-MVP (Build 1)", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Versão", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    Text(text = "1.0.0", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Armazenamento", color = Color.White.copy(alpha = 0.7f))
-                    Text(text = "SQLite Local (Room 2.7)", color = FinanceGreen, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Armazenamento", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    Text(text = "Neste dispositivo", color = FinanceGreen, fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Integridade", color = Color.White.copy(alpha = 0.7f))
-                    Text(text = "Auditoria & SHA-256", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(text = "Integridade", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    Text(text = "Histórico de alterações", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -453,13 +454,13 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Warning, contentDescription = null, tint = FinanceRed)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Excluir Todos os Dados?", color = Color.White)
+                    Text("Excluir Todos os Dados?", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             text = {
                 Text(
                     text = "Esta ação é irreversível conforme o Artigo 18 da LGPD. Todas as contas, transações, orçamentos, metas e logs de auditoria serão apagados permanentemente deste dispositivo.",
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
             },
             confirmButton = {
@@ -472,10 +473,10 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(SettingsUiEvent.DismissWipeConfirmDialog) }) {
-                    Text("Cancelar", color = Color.White)
+                    Text("Cancelar", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
-            containerColor = FinanceSlate800
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -486,14 +487,14 @@ fun SettingsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Download, contentDescription = null, tint = FinanceGreen)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Backup LGPD Exportado", color = Color.White)
+                    Text("Backup LGPD Exportado", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             text = {
                 Column(modifier = Modifier.height(300.dp)) {
                     Text(
                         text = "Dados consolidados prontos para portabilidade:",
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -501,7 +502,7 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(FinanceSlate900)
+                            .background(MaterialTheme.colorScheme.background)
                             .padding(8.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
@@ -509,7 +510,7 @@ fun SettingsScreen(
                             text = json,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                         )
                     }
                 }
@@ -522,15 +523,15 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = FinanceGreen)
                 ) {
-                    Text("Copiar JSON", color = Color.White)
+                    Text("Copiar JSON", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(SettingsUiEvent.ClearExportedData) }) {
-                    Text("Fechar", color = Color.White)
+                    Text("Fechar", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
-            containerColor = FinanceSlate800
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
@@ -544,11 +545,11 @@ private fun SettingsSectionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, FinanceSlate700.copy(alpha = 0.6f), RoundedCornerShape(16.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f), RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = FinanceSlate800)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -564,7 +565,7 @@ private fun SettingsSectionCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             content()
@@ -583,13 +584,13 @@ private fun SetPinModal(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Configurar PIN de Acesso", color = Color.White) },
+        title = { Text("Configurar PIN de Acesso", color = MaterialTheme.colorScheme.onSurface) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Defina um código numérico de 4 dígitos para proteger o aplicativo.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
 
                 OutlinedTextField(
@@ -640,14 +641,14 @@ private fun SetPinModal(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = FinanceGreen)
             ) {
-                Text("Salvar PIN", color = Color.White)
+                Text("Salvar PIN", color = MaterialTheme.colorScheme.onSurface)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.White)
+                Text("Cancelar", color = MaterialTheme.colorScheme.onSurface)
             }
         },
-        containerColor = FinanceSlate800
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }

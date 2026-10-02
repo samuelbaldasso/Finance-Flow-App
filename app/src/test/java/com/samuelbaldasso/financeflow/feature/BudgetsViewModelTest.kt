@@ -52,7 +52,7 @@ class BudgetsViewModelTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo)
+        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo, db)
         budgetRepo = BudgetRepositoryImpl(db.budgetDao(), db.categoryDao(), db.transactionDao())
 
         viewModel = BudgetsViewModel(

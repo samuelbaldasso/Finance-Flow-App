@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import androidx.room.withTransaction
+import com.samuelbaldasso.financeflow.core.database.FinanceFlowDatabase
 import java.time.Instant
 import java.util.UUID
 
@@ -24,7 +26,8 @@ import java.util.UUID
 class AccountRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val transactionDao: TransactionDao,
-    private val auditRepository: AuditRepository
+    private val auditRepository: AuditRepository,
+    private val database: FinanceFlowDatabase
 ) : AccountRepository {
 
     override fun getAllAccountsFlow(): Flow<List<Account>> {
@@ -42,7 +45,7 @@ class AccountRepositoryImpl @Inject constructor(
             } else {
                 val balanceFlows = accounts.map { accountEntity ->
                     transactionDao.getDerivedBalanceSumMinorFlow(accountEntity.id).map { sumMinor ->
-                        val derivedMinor = accountEntity.initialBalanceMinor + sumMinor
+                        val derivedMinor = Math.addExact(accountEntity.initialBalanceMinor, sumMinor)
                         AccountWithBalance(
                             account = accountEntity.toDomain(),
                             derivedBalance = Money(derivedMinor)
@@ -58,7 +61,7 @@ class AccountRepositoryImpl @Inject constructor(
         return accountDao.getById(id)?.toDomain()
     }
 
-    override suspend fun createAccount(account: Account): Account {
+    override suspend fun createAccount(account: Account): Account = database.withTransaction {
         accountDao.insert(AccountEntity.fromDomain(account))
         auditRepository.recordEvent(
             AuditEvent(
@@ -68,10 +71,10 @@ class AccountRepositoryImpl @Inject constructor(
                 afterState = "name=${account.name}, type=${account.type}, initial=${account.initialBalance.amountMinor}"
             )
         )
-        return account
+        return@withTransaction account
     }
 
-    override suspend fun updateAccount(account: Account) {
+    override suspend fun updateAccount(account: Account) = database.withTransaction {
         val before = accountDao.getById(account.id)
         accountDao.update(AccountEntity.fromDomain(account.copy(updatedAt = Instant.now())))
         auditRepository.recordEvent(
@@ -85,7 +88,7 @@ class AccountRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun archiveAccount(id: UUID) {
+    override suspend fun archiveAccount(id: UUID) = database.withTransaction {
         val before = accountDao.getById(id)
         accountDao.softDelete(id, System.currentTimeMillis())
         auditRepository.recordEvent(
@@ -99,7 +102,7 @@ class AccountRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun unarchiveAccount(id: UUID) {
+    override suspend fun unarchiveAccount(id: UUID) = database.withTransaction {
         accountDao.unarchive(id, System.currentTimeMillis())
         auditRepository.recordEvent(
             AuditEvent(

@@ -41,6 +41,10 @@ class SecurityRepositoryImpl @Inject constructor(
         dataSource.setTelemetryConsent(consent)
     }
 
+    override suspend fun isWipePending(): Boolean = dataSource.isWipePending()
+
+    override suspend fun markWipePending() = dataSource.markWipePending()
+
     override suspend fun clearSecuritySettings() {
         dataSource.clearAll()
     }

@@ -23,6 +23,9 @@ import com.samuelbaldasso.financeflow.domain.usecase.transaction.ReconcileTransa
 import com.samuelbaldasso.financeflow.domain.usecase.transaction.UnreconcileTransactionUseCase
 import com.samuelbaldasso.financeflow.domain.usecase.transaction.UpdateTransactionUseCase
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import com.samuelbaldasso.financeflow.domain.repository.AuditRepository
+import com.samuelbaldasso.financeflow.core.model.audit.AuditEvent
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -61,8 +64,8 @@ class TransactionUseCaseTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
 
         createTransactionUseCase = CreateTransactionUseCase(transactionRepo, accountRepo)
         updateTransactionUseCase = UpdateTransactionUseCase(transactionRepo)
@@ -230,4 +233,72 @@ class TransactionUseCaseTest {
         deleteTransactionUseCase(tx.id)
         assertTrue(transactionRepo.getTransactionsByTransferId(transferId).isEmpty())
     }
+    @Test
+    fun `audit failure rolls back transfer legs and earlier audit events`() = runBlocking {
+        val source = accountRepo.createAccount(Account(name = "Origem", type = AccountType.CHECKING, currency = CurrencyCode.BRL))
+        val destination = accountRepo.createAccount(Account(name = "Destino", type = AccountType.SAVINGS, currency = CurrencyCode.BRL))
+        val auditCountBefore = auditRepo.getAllLogsFlow().first().size
+        var recorded = 0
+        val failingAudit = object : AuditRepository by auditRepo {
+            override suspend fun recordEvent(event: AuditEvent) {
+                auditRepo.recordEvent(event)
+                if (++recorded == 2) error("Simulated audit write failure")
+            }
+        }
+        val repository = TransactionRepositoryImpl(db.transactionDao(), failingAudit, db)
+        val useCase = CreateTransactionUseCase(repository, accountRepo)
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking {
+                useCase(Transaction(accountId = source.id, destinationAccountId = destination.id,
+                    type = TransactionType.TRANSFER, transferId = UUID.randomUUID(),
+                    amount = Money(500L), competenceDate = now, effectiveDate = now, description = "Pix"))
+            }
+        }
+        assertTrue(db.transactionDao().getAllFlow().first().isEmpty())
+        assertEquals(auditCountBefore, auditRepo.getAllLogsFlow().first().size)
+    }
+
+    @Test
+    fun `pending transactions do not change available balance`() = runBlocking {
+        val account = accountRepo.createAccount(Account(name = "Saldo", type = AccountType.CHECKING,
+            currency = CurrencyCode.BRL, initialBalance = Money(10000L)))
+        transactionRepo.createTransaction(Transaction(accountId = account.id, type = TransactionType.EXPENSE,
+            amount = Money(3000L), competenceDate = now, effectiveDate = now.plusSeconds(3600),
+            description = "Agendada", status = TransactionStatus.PENDING))
+        transactionRepo.createTransaction(Transaction(accountId = account.id, type = TransactionType.INCOME,
+            amount = Money(500L), competenceDate = now, effectiveDate = now, description = "Recebida"))
+        assertEquals(10500L, getAccountsWithBalanceUseCase().first().single().derivedBalance.amountMinor)
+    }
+
+    @Test
+    fun `transfer cannot silently move money across currencies`() = runBlocking {
+        val source = accountRepo.createAccount(Account(name = "Real", type = AccountType.CHECKING, currency = CurrencyCode.BRL))
+        val destination = accountRepo.createAccount(Account(name = "Dolar", type = AccountType.CHECKING, currency = CurrencyCode.USD))
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                createTransactionUseCase(Transaction(accountId = source.id, destinationAccountId = destination.id,
+                    type = TransactionType.TRANSFER, transferId = UUID.randomUUID(), amount = Money(500L),
+                    competenceDate = now, effectiveDate = now, description = "Cambio implicito"))
+            }
+        }
+        assertTrue(db.transactionDao().getAllFlow().first().isEmpty())
+    }
+
+    @Test
+    fun `transfer reconciliation and edits affect both legs and preserve total money`() = runBlocking {
+        val source = accountRepo.createAccount(Account(name = "Origem", type = AccountType.CHECKING, currency = CurrencyCode.BRL, initialBalance = Money(10000L)))
+        val destination = accountRepo.createAccount(Account(name = "Destino", type = AccountType.CHECKING, currency = CurrencyCode.BRL))
+        val tx = createTransactionUseCase(Transaction(accountId = source.id, destinationAccountId = destination.id,
+            type = TransactionType.TRANSFER, transferId = UUID.randomUUID(), amount = Money(1000L),
+            competenceDate = now, effectiveDate = now, description = "Transferencia"))
+        updateTransactionUseCase(tx.copy(amount = Money(2500L)))
+        val balances = getAccountsWithBalanceUseCase().first().associateBy { it.account.id }
+        assertEquals(7500L, balances.getValue(source.id).derivedBalance.amountMinor)
+        assertEquals(2500L, balances.getValue(destination.id).derivedBalance.amountMinor)
+        reconcileTransactionUseCase(tx.id)
+        assertTrue(transactionRepo.getTransactionsByTransferId(tx.transferId!!).all { it.status == TransactionStatus.RECONCILED })
+        unreconcileTransactionUseCase(tx.id)
+        assertTrue(transactionRepo.getTransactionsByTransferId(tx.transferId!!).all { it.status == TransactionStatus.CLEARED })
+    }
+
 }

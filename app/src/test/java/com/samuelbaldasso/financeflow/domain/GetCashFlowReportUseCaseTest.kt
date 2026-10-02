@@ -37,6 +37,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
+import com.samuelbaldasso.financeflow.domain.usecase.transaction.CreateTransactionUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -64,9 +65,9 @@ class GetCashFlowReportUseCaseTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
 
         useCase = GetCashFlowReportUseCase(transactionRepo, categoryRepo)
     }
@@ -90,7 +91,7 @@ class GetCashFlowReportUseCaseTest {
 
         val currentMonth = LocalDate.now().monthValue
         val currentYear = LocalDate.now().year
-        val dateInstant = LocalDate.of(currentYear, currentMonth, 15).atStartOfDay(ZoneOffset.UTC).toInstant()
+        val dateInstant = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay(ZoneOffset.UTC).toInstant()
 
         // 1. Regular Income: R$ 3.000,00
         transactionRepo.createTransaction(
@@ -130,7 +131,7 @@ class GetCashFlowReportUseCaseTest {
 
         // 3. Transfer between accounts: R$ 1.500,00 (Must NOT count as income or expense!)
         val transferId = UUID.randomUUID()
-        transactionRepo.createTransaction(
+        CreateTransactionUseCase(transactionRepo, accountRepo)(
             Transaction(
                 accountId = accountId,
                 destinationAccountId = destAccountId,

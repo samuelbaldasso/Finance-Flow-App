@@ -41,6 +41,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
+import com.samuelbaldasso.financeflow.domain.repository.SecurityRepository
+import com.samuelbaldasso.financeflow.core.model.audit.AuditEvent
+import com.samuelbaldasso.financeflow.core.model.audit.AuditAction
+import com.samuelbaldasso.financeflow.core.database.entity.CreditCardInvoiceEntity
+import com.samuelbaldasso.financeflow.core.database.entity.AuditLogEntity
+import kotlinx.coroutines.runBlocking
+import androidx.room.withTransaction
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,9 +84,9 @@ class SecurityAndLgpdTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        categoryRepo = CategoryRepositoryImpl(db.categoryDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
         budgetRepo = BudgetRepositoryImpl(db.budgetDao(), db.categoryDao(), db.transactionDao())
         goalRepo = GoalRepositoryImpl(db.goalDao(), db.transactionDao())
 
@@ -87,7 +95,7 @@ class SecurityAndLgpdTest {
         appLockManager = AppLockManager()
 
         exportAllUserDataUseCase = ExportAllUserDataUseCase(
-            accountRepo, transactionRepo, categoryRepo, budgetRepo, goalRepo, auditRepo
+            accountRepo, transactionRepo, categoryRepo, budgetRepo, goalRepo, auditRepo, db, securityRepo
         )
         wipeAllUserDataUseCase = WipeAllUserDataUseCase(db, securityRepo, categoryRepo)
     }
@@ -243,4 +251,55 @@ class SecurityAndLgpdTest {
         assertTrue(categories.isNotEmpty())
         assertTrue(categories.any { it.isSystem })
     }
+    @Test
+    fun `export includes all audit entries transaction metadata and invoices`() = runTest(testDispatcher) {
+        val account = accountRepo.createAccount(Account(name = "Cartao", type = AccountType.CREDIT_CARD,
+            currency = CurrencyCode.BRL, closingDay = 10, dueDay = 20))
+        val invoice = CreditCardInvoiceEntity(id = UUID.randomUUID(), cardAccountId = account.id,
+            closingDate = Instant.now(), dueDate = Instant.now().plusSeconds(86400), totalMinor = 500L)
+        db.creditCardInvoiceDao().insert(invoice)
+        val tx = Transaction(accountId = account.id, type = TransactionType.EXPENSE, amount = Money(500L),
+            competenceDate = Instant.now(), effectiveDate = Instant.now(), description = "Compra",
+            tags = listOf("viagem", "trabalho"), recurrenceRuleId = UUID.randomUUID(), invoiceId = invoice.id,
+            attachmentPath = "/private/receipt.pdf")
+        transactionRepo.createTransaction(tx)
+        db.withTransaction {
+            repeat(1005) {
+                db.auditLogDao().insert(AuditLogEntity.fromDomain(AuditEvent(entityType = "TEST",
+                    entityId = tx.id, action = AuditAction.UPDATE, actor = "regression")))
+            }
+        }
+        val expectedLogs = auditRepo.getAllLogsFlow().first().size
+        val json = JSONObject(exportAllUserDataUseCase())
+        assertEquals(expectedLogs, json.getJSONArray("auditLogs").length())
+        assertTrue(expectedLogs > 1000)
+        val exported = json.getJSONArray("transactions").getJSONObject(0)
+        assertEquals(tx.recurrenceRuleId.toString(), exported.getString("recurrenceRuleId"))
+        assertEquals(tx.invoiceId.toString(), exported.getString("invoiceId"))
+        assertEquals("viagem", exported.getJSONArray("tags").getString(0))
+        assertEquals(Instant.ofEpochMilli(tx.createdAt.toEpochMilli()).toString(), exported.getString("createdAt"))
+        assertEquals(1, json.getJSONArray("creditCardInvoices").length())
+        assertFalse(json.getBoolean("attachmentsIncluded"))
+        assertFalse(json.getJSONObject("securitySettings").has("pinHash"))
+    }
+
+    @Test
+    fun `failed preference cleanup leaves durable wipe intent and can be retried`() = runTest(testDispatcher) {
+        securityRepo.clearSecuritySettings()
+        accountRepo.createAccount(Account(name = "Apagar", type = AccountType.CHECKING, currency = CurrencyCode.BRL))
+        securityRepo.setPin("1234")
+        val failingSecurity = object : SecurityRepository by securityRepo {
+            override suspend fun clearSecuritySettings() { error("Simulated disk write failure") }
+        }
+        val interruptedWipe = WipeAllUserDataUseCase(db, failingSecurity, categoryRepo)
+        val failure = runCatching { interruptedWipe() }.exceptionOrNull()
+        assertTrue(failure is IllegalStateException)
+        assertTrue(securityRepo.isWipePending())
+        assertTrue(accountRepo.getAllAccountsFlow().first().isEmpty())
+        wipeAllUserDataUseCase()
+        assertFalse(securityRepo.isWipePending())
+        assertFalse(securityRepo.verifyPin("1234"))
+        assertTrue(categoryRepo.getAllCategoriesFlow().first().all { it.isSystem })
+    }
+
 }

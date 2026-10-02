@@ -12,6 +12,9 @@ import java.util.UUID
 @Dao
 interface CreditCardInvoiceDao {
 
+    @Query("SELECT * FROM credit_card_invoices ORDER BY closing_date DESC")
+    suspend fun getAll(): List<CreditCardInvoiceEntity>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(invoice: CreditCardInvoiceEntity)
 

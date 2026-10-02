@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -114,14 +115,26 @@ class SettingsViewModel internal constructor(
             SettingsUiEvent.ConfirmWipeAllData -> {
                 _showWipeConfirmDialog.value = false
                 viewModelScope.launch {
-                    wipeAllUserDataUseCase()
-                    _userFeedbackMessage.value = "Todos os dados foram excluídos com sucesso (LGPD Art. 18)."
+                    try {
+                        wipeAllUserDataUseCase()
+                        _exportedDataJson.value = null
+                        _userFeedbackMessage.value = "Seus dados foram excluídos."
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        _userFeedbackMessage.value = "Não foi possível concluir a exclusão. Tente novamente; a exclusão também será retomada ao reabrir o app."
+                    }
                 }
             }
             SettingsUiEvent.ExportAllData -> {
                 viewModelScope.launch {
-                    val json = exportAllUserDataUseCase()
-                    _exportedDataJson.value = json
+                    try {
+                        _exportedDataJson.value = exportAllUserDataUseCase()
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        _userFeedbackMessage.value = "Não foi possível exportar os dados. Tente novamente."
+                    }
                 }
             }
             SettingsUiEvent.ClearExportedData -> {

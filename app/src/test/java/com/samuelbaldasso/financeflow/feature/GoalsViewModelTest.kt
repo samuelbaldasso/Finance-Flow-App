@@ -57,8 +57,8 @@ class GoalsViewModelTest {
             .build()
 
         auditRepo = AuditRepositoryImpl(db.auditLogDao())
-        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo)
-        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo)
+        accountRepo = AccountRepositoryImpl(db.accountDao(), db.transactionDao(), auditRepo, db)
+        transactionRepo = TransactionRepositoryImpl(db.transactionDao(), auditRepo, db)
         goalRepo = GoalRepositoryImpl(db.goalDao(), db.transactionDao())
 
         createTransactionUseCase = CreateTransactionUseCase(transactionRepo, accountRepo)

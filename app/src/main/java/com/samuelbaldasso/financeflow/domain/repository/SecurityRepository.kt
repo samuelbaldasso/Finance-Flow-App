@@ -12,5 +12,7 @@ interface SecurityRepository {
     suspend fun setLockTimeoutMinutes(minutes: Int)
     suspend fun setScreenshotProtection(enabled: Boolean)
     suspend fun setTelemetryConsent(consent: Boolean)
+    suspend fun isWipePending(): Boolean
+    suspend fun markWipePending()
     suspend fun clearSecuritySettings()
 }

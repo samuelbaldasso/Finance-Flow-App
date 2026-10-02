@@ -23,7 +23,7 @@ fun FinancialMoneyText(
     type: TransactionType? = null,
     style: TextStyle = MaterialTheme.typography.titleMedium,
     colorOverride: Color? = null,
-    locale: Locale = Locale.getDefault()
+    locale: Locale = Locale.forLanguageTag("pt-BR")
 ) {
     val financialColors = LocalFinancialColors.current
     val currenced = CurrencedMoney(money, currency)

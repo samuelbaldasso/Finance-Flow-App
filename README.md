@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Aplicativo de Gestão Financeira Pessoal e PJ para Android Nativo</strong><br>
-  <em>Construído com padrões de engenharia de nível Staff/Senior, Kotlin idiomático, Jetpack Compose, Clean Architecture e Offline-First.</em>
+  <em>Projeto de portfólio Android com Kotlin, Jetpack Compose, persistência local, regras financeiras e testes.</em>
 </p>
 
 <p align="center">
@@ -13,14 +13,13 @@
   <img src="https://img.shields.io/badge/Paging%203-3.3.6-blue" alt="Paging 3" />
   <img src="https://img.shields.io/badge/MinSdk-26-informational" alt="MinSdk" />
   <img src="https://img.shields.io/badge/TargetSdk-36-success" alt="TargetSdk" />
-  <img src="https://img.shields.io/badge/Tests-100%25%20Passing-brightgreen" alt="Tests" />
 </p>
 
 ---
 
 ## 📱 Visão Geral & Demonstração Visual
 
-O **FinanceFlow** é um aplicativo financeiro de alta criticidade desenvolvido para garantir máxima precisão monetária, segurança de dados e experiência fluida no ecossistema Android.
+O **FinanceFlow** é um aplicativo financeiro de alta criticidade desenvolvido com foco em precisão monetária, privacidade e experiência fluida no ecossistema Android.
 
 ### Galeria de Telas
 
@@ -93,12 +92,12 @@ O projeto foi concebido sob princípios rigorosos de **Clean Architecture**, **D
    - Compras parceladas geram N parcelas vinculadas (`installmentGroupId`) distribuídas sem perda de centavos residuais na divisão.
 
 5. **Auditoria Contínua (§3.3):**
-   - Qualquer mutação financeira é gravada na tabela imutável `audit_logs` com timestamp UTC e payload de auditoria.
+   - Mutações de contas, categorias e transações são gravadas na tabela imutável `audit_logs` com timestamp UTC e payload de auditoria.
 
 6. **Privacidade e LGPD (§3.11):**
-   - Conformidade com o Artigo 18 da LGPD:
-     - **Portabilidade:** Exportação completa de todos os dados do usuário em JSON legível.
-     - **Direito ao Esquecimento:** Wipe total de dados com limpeza atômica de tabelas e preferências.
+   - Recursos de controle de dados e privacidade:
+     - **Portabilidade:** Exportação em JSON de todos os registros do banco e das preferências públicas de segurança, sem truncar a auditoria. Credenciais e arquivos de anexos não são incluídos.
+     - **Direito ao Esquecimento:** Exclusão das tabelas e preferências com intenção persistida e retomada na inicialização após falhas. Room e DataStore não compartilham uma transação; as categorias padrão são recriadas.
      - **FLAG_SECURE:** Bloqueio de capturas de tela e ocultação dos dados no alternador de apps.
      - **AppLock & Biometria:** Bloqueio automático por tempo de background com suporte a Biometria (`BiometricPrompt`) e PIN com Hash `SHA-256` salgado.
 
@@ -116,6 +115,7 @@ Todas as decisões arquiteturais foram formalizadas em ADRs concisos:
 | [ADR-004](docs/adr/ADR-004-dependency-injection-hilt.md) | Injeção de Dependências com Dagger Hilt | Aceito |
 | [ADR-005](docs/adr/ADR-005-paging-3-scalability.md) | Paginação Reativa com AndroidX Paging 3 para Escalabilidade de Extratos | Aceito |
 | [ADR-006](docs/adr/ADR-006-mobile-security-and-lgpd.md) | Segurança em Camadas (Biometria, PIN Salgado, FLAG_SECURE e LGPD) | Aceito |
+| [ADR-007](docs/adr/ADR-007-data-integrity-and-recovery.md) | Integridade, migração sem perda e recuperação de exclusão | Aceito |
 
 ---
 
@@ -167,3 +167,21 @@ O projeto conta com ampla cobertura de testes unitários de regras de domínio, 
 **Samuel Baldasso**  
 - GitHub: [@samuelbaldasso](https://github.com/samuelbaldasso)
 - E-mail: baldassosamuel93@gmail.com
+
+## Validação e evolução
+
+A pipeline em `.github/workflows/android.yml` executa testes, Android Lint e build de debug em cada pull request e push para `main`/`master`.
+
+O banco está na versão 2. A migração 1 → 2 adiciona um índice de conta/status preservando os registros existentes. Migrações ausentes falham explicitamente: não há fallback que apague dados. Os schemas exportados ficam em `app/schemas`.
+
+Para reproduzir as verificações:
+
+```bash
+./gradlew :core:model:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+Os testes de regressão verificam rollback de operação e auditoria, saldos sem pendências, migração com dados existentes, exportação acima de mil eventos e retomada da exclusão após falha.
+
+### Limites atuais
+
+O app armazena dados localmente, sem sincronização remota. A existência de exportação, bloqueio e exclusão não constitui certificação jurídica ou de segurança. A exportação preserva referências a anexos, mas não empacota seus arquivos. O gerenciamento de faturas e a recorrência ainda precisam de evolução para uma operação de produção completa.

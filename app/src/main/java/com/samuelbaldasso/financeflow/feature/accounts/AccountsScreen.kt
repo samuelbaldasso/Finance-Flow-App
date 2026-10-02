@@ -1,8 +1,13 @@
 package com.samuelbaldasso.financeflow.feature.accounts
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.samuelbaldasso.financeflow.designsystem.component.FinancialAmountField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +38,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,7 +68,7 @@ import com.samuelbaldasso.financeflow.designsystem.theme.EmeraldHeroGradient
 import com.samuelbaldasso.financeflow.designsystem.theme.LocalFinancialColors
 import com.samuelbaldasso.financeflow.domain.repository.AccountWithBalance
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountsScreen(
     state: AccountsUiState,
@@ -75,6 +80,8 @@ fun AccountsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -82,7 +89,7 @@ fun AccountsScreen(
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "Gestão de Contas & Patrimônio",
+                            text = "Seu dinheiro, com clareza",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -108,13 +115,13 @@ fun AccountsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
+                text = { Text("Nova conta") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 onClick = { onEvent(AccountsUiEvent.OpenCreateDialog) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova Conta")
-            }
+            )
         },
         modifier = modifier
     ) { padding ->
@@ -122,7 +129,7 @@ fun AccountsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             // Hero Net Worth Card
             HeroNetWorthCard(
@@ -134,7 +141,7 @@ fun AccountsScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "Minhas Contas (${state.accounts.size})",
+                text = "Suas contas · ${state.accounts.size}",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -151,6 +158,7 @@ fun AccountsScreen(
                 )
             } else {
                 LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -206,7 +214,7 @@ private fun HeroNetWorthCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(EmeraldHeroGradient)
-                .padding(20.dp)
+                .padding(24.dp)
         ) {
             Column {
                 Row(
@@ -225,7 +233,7 @@ private fun HeroNetWorthCard(
 
                     IconButton(
                         onClick = onToggleVisibility,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = if (balancesVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -375,7 +383,7 @@ private fun AccountItemCard(
                 if (!account.isArchived) {
                     IconButton(
                         onClick = onArchiveClick,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Archive,
@@ -392,7 +400,7 @@ private fun AccountItemCard(
 
 private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun CreateAccountDialog(
     onDismiss: () -> Unit,
@@ -420,7 +428,7 @@ private fun CreateAccountDialog(
             Text("Nova Conta", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -431,7 +439,7 @@ private fun CreateAccountDialog(
                 )
 
                 Text("Tipo de Conta:", style = MaterialTheme.typography.labelMedium)
-                Row(
+                FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -469,22 +477,20 @@ private fun CreateAccountDialog(
                 }
 
                 if (selectedType != AccountType.CREDIT_CARD) {
-                    OutlinedTextField(
+                    FinancialAmountField(
                         value = initialBalanceStr,
-                        onValueChange = { initialBalanceStr = it.filter { char -> char.isDigit() } },
-                        label = { Text("Saldo Inicial (em centavos)") },
-                        placeholder = { Text("ex: 15000 para R$ 150,00") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = { initialBalanceStr = it },
+                        label = "Saldo Inicial",
+                        modifier = Modifier.fillMaxWidth(),
+                        currency = selectedCurrency
                     )
                 } else {
-                    OutlinedTextField(
+                    FinancialAmountField(
                         value = creditLimitStr,
-                        onValueChange = { creditLimitStr = it.filter { char -> char.isDigit() } },
-                        label = { Text("Limite do Cartão (em centavos)") },
-                        placeholder = { Text("ex: 500000 para R$ 5.000,00") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChange = { creditLimitStr = it },
+                        label = "Limite do Cartão",
+                        modifier = Modifier.fillMaxWidth(),
+                        currency = selectedCurrency
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
@@ -512,7 +518,9 @@ private fun CreateAccountDialog(
                     val due = dueDayStr.toIntOrNull()
                     onConfirm(name, selectedType, selectedCurrency, initialMinor, limitMinor, closing, due)
                 },
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank() && (selectedType != AccountType.CREDIT_CARD ||
+                    ((creditLimitStr.toLongOrNull() ?: 0L) > 0L &&
+                    closingDayStr.toIntOrNull() in 1..31 && dueDayStr.toIntOrNull() in 1..31))
             ) {
                 Text("Criar Conta")
             }

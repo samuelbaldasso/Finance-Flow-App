@@ -1,5 +1,7 @@
 package com.samuelbaldasso.financeflow.feature.reports
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -93,6 +95,8 @@ fun ReportsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -129,7 +133,7 @@ fun ReportsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             // Month selector bar
             Row(
@@ -193,6 +197,7 @@ fun ReportsScreen(
                     )
                 } else {
                     LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -470,7 +475,7 @@ private fun CsvImportDialog(
             Text("Importar Extrato CSV", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Selecione a conta e cole os dados em formato CSV para pré-visualização:",
                     style = MaterialTheme.typography.bodySmall,

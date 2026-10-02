@@ -1,6 +1,8 @@
 package com.samuelbaldasso.financeflow.core.database
 
 import android.content.Context
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -31,7 +33,7 @@ import com.samuelbaldasso.financeflow.core.database.entity.TransactionEntity
         CreditCardInvoiceEntity::class,
         AuditLogEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(DatabaseConverters::class)
@@ -46,6 +48,12 @@ abstract class FinanceFlowDatabase : RoomDatabase() {
     abstract fun auditLogDao(): AuditLogDao
 
     companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_account_id_status ON transactions(account_id, status)")
+            }
+        }
+
         const val DATABASE_NAME = "finance_flow.db"
 
         fun build(context: Context, inMemory: Boolean = false): FinanceFlowDatabase {
@@ -55,7 +63,7 @@ abstract class FinanceFlowDatabase : RoomDatabase() {
                 Room.databaseBuilder(context, FinanceFlowDatabase::class.java, DATABASE_NAME)
             }
             return builder
-                .fallbackToDestructiveMigration(dropAllTables = true)
+                .addMigrations(MIGRATION_1_2)
                 .build()
         }
     }

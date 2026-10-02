@@ -68,7 +68,7 @@ abstract class TransactionDao {
             END
         ), 0)
         FROM transactions 
-        WHERE account_id = :accountId
+        WHERE account_id = :accountId AND status != 'PENDING'
     """)
     abstract fun getDerivedBalanceSumMinorFlow(accountId: UUID): Flow<Long>
 

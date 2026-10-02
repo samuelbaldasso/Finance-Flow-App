@@ -15,12 +15,15 @@ import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import androidx.room.withTransaction
+import com.samuelbaldasso.financeflow.core.database.FinanceFlowDatabase
 import java.time.Instant
 import java.util.UUID
 
 class TransactionRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val auditRepository: AuditRepository
+    private val auditRepository: AuditRepository,
+    private val database: FinanceFlowDatabase
 ) : TransactionRepository {
 
     override fun getAllTransactionsFlow(): Flow<List<Transaction>> {
@@ -63,7 +66,9 @@ class TransactionRepositoryImpl @Inject constructor(
         return transactionDao.getByTransferId(transferId).map { it.toDomain() }
     }
 
-    override suspend fun createTransaction(transaction: Transaction): Transaction {
+    override suspend fun createTransaction(transaction: Transaction): Transaction = database.withTransaction {
+        require(!transaction.isTransfer) { "Transfers must be persisted as an atomic pair" }
+        requireActiveAccount(transaction.accountId)
         transaction.validateFutureDate(Instant.now())
         transactionDao.insert(TransactionEntity.fromDomain(transaction))
         auditRepository.recordEvent(
@@ -74,10 +79,18 @@ class TransactionRepositoryImpl @Inject constructor(
                 afterState = "type=${transaction.type}, amount=${transaction.amount.amountMinor}, desc=${transaction.description}"
             )
         )
-        return transaction
+        return@withTransaction transaction
     }
 
-    override suspend fun createTransfer(debitTx: Transaction, creditTx: Transaction) {
+    override suspend fun createTransfer(debitTx: Transaction, creditTx: Transaction) = database.withTransaction {
+        val source = requireActiveAccount(debitTx.accountId)
+        val destination = requireActiveAccount(creditTx.accountId)
+        require(source.id != destination.id) { "Transfer accounts must be different" }
+        require(source.currency == destination.currency) { "Transfer requires accounts in the same currency" }
+        require(debitTx.isTransfer && creditTx.isTransfer && debitTx.transferId != null &&
+            debitTx.transferId == creditTx.transferId && debitTx.amount == creditTx.amount &&
+            debitTx.destinationAccountId == creditTx.accountId && creditTx.destinationAccountId == null &&
+            debitTx.status == creditTx.status) { "Invalid transfer pair" }
         debitTx.validateFutureDate(Instant.now())
         creditTx.validateFutureDate(Instant.now())
 
@@ -104,31 +117,44 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun updateTransaction(transaction: Transaction) {
+    override suspend fun updateTransaction(transaction: Transaction) = database.withTransaction {
         val existing = transactionDao.getById(transaction.id)?.toDomain()
             ?: throw IllegalArgumentException("Transaction ${transaction.id} not found")
 
         existing.validateModificationAllowed()
+        requireActiveAccount(transaction.accountId)
+        require(transaction.accountId == existing.accountId && transaction.type == existing.type &&
+            transaction.transferId == existing.transferId &&
+            transaction.destinationAccountId == existing.destinationAccountId) {
+            "Changing transaction ownership or transfer structure requires a new transaction"
+        }
         transaction.validateFutureDate(Instant.now())
 
         val transferId = transaction.transferId
         if (transaction.isTransfer && transferId != null) {
             val transferLegs = transactionDao.getByTransferId(transferId)
+            require(transferLegs.size == 2) { "Transfer must contain exactly two legs" }
             val otherLeg = transferLegs.firstOrNull { it.id != transaction.id }
-            if (otherLeg != null) {
-                val updatedOtherLeg = otherLeg.copy(
-                    amountMinor = transaction.amount.amountMinor,
-                    competenceDate = transaction.competenceDate,
-                    effectiveDate = transaction.effectiveDate,
-                    updatedAt = Instant.now()
-                )
-                transactionDao.updateAtomicTransfer(
-                    TransactionEntity.fromDomain(transaction),
-                    updatedOtherLeg
-                )
-            } else {
-                transactionDao.update(TransactionEntity.fromDomain(transaction))
-            }
+            requireNotNull(otherLeg) { "Transfer counterpart is missing" }
+            otherLeg.toDomain().validateModificationAllowed()
+            requireActiveAccount(otherLeg.accountId)
+            val updatedOtherLeg = otherLeg.copy(
+                amountMinor = transaction.amount.amountMinor,
+                competenceDate = transaction.competenceDate,
+                effectiveDate = transaction.effectiveDate,
+                status = transaction.status,
+                updatedAt = Instant.now()
+            )
+            transactionDao.updateAtomicTransfer(
+                TransactionEntity.fromDomain(transaction),
+                updatedOtherLeg
+            )
+            auditRepository.recordEvent(AuditEvent(
+                entityType = "TRANSACTION", entityId = otherLeg.id, action = AuditAction.UPDATE,
+                beforeState = "amount=${otherLeg.amountMinor}, status=${otherLeg.status}",
+                afterState = "amount=${updatedOtherLeg.amountMinor}, status=${updatedOtherLeg.status}"
+            ))
+
         } else {
             transactionDao.update(TransactionEntity.fromDomain(transaction))
         }
@@ -144,13 +170,21 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun deleteTransaction(id: UUID) {
-        val existing = transactionDao.getById(id)?.toDomain() ?: return
+    override suspend fun deleteTransaction(id: UUID) = database.withTransaction {
+        val existing = transactionDao.getById(id)?.toDomain() ?: return@withTransaction
         existing.validateModificationAllowed()
 
         val transferId = existing.transferId
         if (existing.isTransfer && transferId != null) {
+            val legs = transactionDao.getByTransferId(transferId)
+            legs.forEach { it.toDomain().validateModificationAllowed() }
             transactionDao.deleteByTransferId(transferId)
+            legs.filter { it.id != id }.forEach { leg ->
+                auditRepository.recordEvent(AuditEvent(
+                    entityType = "TRANSACTION", entityId = leg.id, action = AuditAction.DELETE,
+                    beforeState = "amount=${leg.amountMinor}, transferId=$transferId"
+                ))
+            }
             auditRepository.recordEvent(
                 AuditEvent(
                     entityType = "TRANSACTION",
@@ -173,32 +207,31 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun reconcileTransaction(id: UUID) {
-        val existing = transactionDao.getById(id)?.toDomain() ?: return
-        val reconciled = existing.copy(status = TransactionStatus.RECONCILED, updatedAt = Instant.now())
-        transactionDao.update(TransactionEntity.fromDomain(reconciled))
-        auditRepository.recordEvent(
-            AuditEvent(
-                entityType = "TRANSACTION",
-                entityId = id,
-                action = AuditAction.RECONCILE,
-                beforeState = "status=${existing.status}",
-                afterState = "status=RECONCILED"
-            )
-        )
+        changeStatus(id, TransactionStatus.RECONCILED, AuditAction.RECONCILE)
     }
 
     override suspend fun unreconcileTransaction(id: UUID) {
-        val existing = transactionDao.getById(id)?.toDomain() ?: return
-        val unreconciled = existing.copy(status = TransactionStatus.CLEARED, updatedAt = Instant.now())
-        transactionDao.update(TransactionEntity.fromDomain(unreconciled))
-        auditRepository.recordEvent(
-            AuditEvent(
-                entityType = "TRANSACTION",
-                entityId = id,
-                action = AuditAction.UNRECONCILE,
-                beforeState = "status=RECONCILED",
-                afterState = "status=CLEARED"
-            )
+        changeStatus(id, TransactionStatus.CLEARED, AuditAction.UNRECONCILE)
+    }
+
+    private suspend fun changeStatus(id: UUID, target: TransactionStatus, action: AuditAction) = database.withTransaction {
+        val existing = transactionDao.getById(id) ?: return@withTransaction
+        val legs = existing.transferId?.let { transactionDao.getByTransferId(it) } ?: listOf(existing)
+        require(legs.all { it.status != TransactionStatus.PENDING }) { "Pending transactions cannot be reconciled" }
+        legs.forEach { leg ->
+            transactionDao.update(leg.copy(status = target, updatedAt = Instant.now()))
+            auditRepository.recordEvent(AuditEvent(
+                entityType = "TRANSACTION", entityId = leg.id, action = action,
+                beforeState = "status=${leg.status}", afterState = "status=$target"
+            ))
+        }
+    }
+
+    private suspend fun requireActiveAccount(id: UUID): com.samuelbaldasso.financeflow.core.database.entity.AccountEntity {
+        val account = requireNotNull(database.accountDao().getById(id)) { "Account $id not found" }
+        if (account.isArchived) throw com.samuelbaldasso.financeflow.core.model.error.DomainException.AccountArchivedException(
+            "Cannot add or update transactions in archived account ${account.name}"
         )
+        return account
     }
 }

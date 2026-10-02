@@ -8,9 +8,9 @@ Usuários de aplicativos financeiros esperam disponibilidade imediata, responsiv
 
 ## Decisão
 1. Adotar a arquitetura **Offline-First**, estabelecendo o **Room Database local** como a única fonte da verdade (Single Source of Truth - SSOT).
-2. Toda e qualquer mutação de estado (criação de conta, registro de despesa, conciliação, rolagem de orçamento) é gravada atomicamente no banco local antes de qualquer eventual sincronização remota.
+2. Os registros são persistidos no banco local. Mutações de contas, categorias e transações incluem a auditoria na mesma transação, conforme ADR-007.
 3. Repositórios expõem fluxos contínuos (`Flow<T>`) observáveis a partir das queries do Room, assegurando que a UI reaja instantaneamente a qualquer alteração de persistência (Padrão UDF).
-4. Operações complexas que envolvem múltiplas tabelas (ex: transferências atômicas debitando origem e creditando destino, ou parcelamentos com N faturas) são executadas em bloco `@Transaction` com isolamento ACID.
+4. Transferências executam as duas pernas e auditoria em `withTransaction`. A criação de grupos de parcelas ainda exige evolução para garantir atomicidade do grupo inteiro.
 
 ## Consequências
 

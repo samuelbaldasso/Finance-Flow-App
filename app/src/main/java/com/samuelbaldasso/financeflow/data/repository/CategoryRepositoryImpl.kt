@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import androidx.room.withTransaction
+import com.samuelbaldasso.financeflow.core.database.FinanceFlowDatabase
 import java.util.UUID
 
 class CategoryRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
-    private val auditRepository: AuditRepository
+    private val auditRepository: AuditRepository,
+    private val database: FinanceFlowDatabase
 ) : CategoryRepository {
 
     override fun getAllCategoriesFlow(): Flow<List<Category>> {
@@ -27,7 +30,7 @@ class CategoryRepositoryImpl @Inject constructor(
         return categoryDao.getById(id)?.toDomain()
     }
 
-    override suspend fun createCategory(category: Category): Category {
+    override suspend fun createCategory(category: Category): Category = database.withTransaction {
         categoryDao.insert(CategoryEntity.fromDomain(category))
         auditRepository.recordEvent(
             AuditEvent(
@@ -37,10 +40,10 @@ class CategoryRepositoryImpl @Inject constructor(
                 afterState = "name=${category.name}, type=${category.type}, parent=${category.parentCategoryId}"
             )
         )
-        return category
+        return@withTransaction category
     }
 
-    override suspend fun updateCategory(category: Category) {
+    override suspend fun updateCategory(category: Category) = database.withTransaction {
         val before = categoryDao.getById(category.id)
         categoryDao.update(CategoryEntity.fromDomain(category))
         auditRepository.recordEvent(
@@ -54,8 +57,8 @@ class CategoryRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun deleteCategory(id: UUID, reassignToCategoryId: UUID) {
-        val category = categoryDao.getById(id) ?: return
+    override suspend fun deleteCategory(id: UUID, reassignToCategoryId: UUID) = database.withTransaction {
+        val category = categoryDao.getById(id) ?: return@withTransaction
         category.toDomain().validateDeletionAllowed()
 
         categoryDao.deleteWithReassignment(category, reassignToCategoryId)
@@ -70,11 +73,11 @@ class CategoryRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getTransactionUsageCount(categoryId: UUID): Int {
-        return categoryDao.getTransactionUsageCount(categoryId)
+    override suspend fun getTransactionUsageCount(categoryId: UUID): Int = database.withTransaction {
+        return@withTransaction categoryDao.getTransactionUsageCount(categoryId)
     }
 
-    override suspend fun seedDefaultCategoriesIfNeeded() {
+    override suspend fun seedDefaultCategoriesIfNeeded() = database.withTransaction {
         val existing = categoryDao.getAllFlow().first()
         if (existing.isEmpty()) {
             val defaults = listOf(

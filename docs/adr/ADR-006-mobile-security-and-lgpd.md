@@ -18,14 +18,14 @@ Aplicações financeiras de alta criticidade necessitam de salvaguardas rigorosa
 4. **Trilha de Auditoria Imutável:**
    - Registrar cada inserção, alteração ou exclusão financeira na tabela `audit_logs` (com timestamp UTC, tipo de entidade, ação e payload serializado).
 5. **Conformidade com a LGPD (Art. 18):**
-   - **Portabilidade:** `ExportAllUserDataUseCase` exporta todos os dados do usuário (contas, transações, orçamentos, metas e auditoria) em formato JSON aberto.
-   - **Direito ao Esquecimento:** `WipeAllUserDataUseCase` executa a eliminação total e irreversível de todos os registros locais e configurações.
+   - **Portabilidade:** `ExportAllUserDataUseCase` exporta todos os dados do usuário (contas, transações, orçamentos, metas e auditoria) em formato JSON aberto, incluindo faturas e metadados. Credenciais e arquivos de anexos não são exportados; detalhes no ADR-007.
+   - **Direito ao Esquecimento:** `WipeAllUserDataUseCase` executa a exclusão dos registros e configurações com intenção persistida para recuperação após falhas. Categorias padrão são recriadas; detalhes no ADR-007.
    - **Minimização de Dados:** Nenhum dado pessoal identificável (PII) é transmitido ou coletado sem consentimento explícito prévio.
 
 ## Consequências
 
 ### Positivas
-- **Padrão Bancário:** Nível de segurança condizente com as diretrizes do Banco Central do Brasil e LGPD.
+- **Controles locais:** Bloqueio, proteção de tela e controle de dados; não há certificação de segurança ou conformidade jurídica.
 - **Transparência e Confiança:** O usuário tem controle soberano sobre seus dados e privacidade.
 - **Proteção Contra Ataques Físicos e Espionagem:** Sessões bloqueadas automaticamente ao alternar de aplicativo.
 

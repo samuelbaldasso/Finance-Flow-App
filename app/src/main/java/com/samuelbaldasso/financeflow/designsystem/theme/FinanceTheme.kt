@@ -3,6 +3,14 @@ package com.samuelbaldasso.financeflow.designsystem.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -23,8 +31,13 @@ private val DarkColorScheme = darkColorScheme(
     onSecondaryContainer = Color(0xFFBFDBFE),
     tertiary = FinanceWarningAmberDark,
     onTertiary = Color(0xFF451A03),
-    background = Color(0xFF0B0F19),
+    background = Color(0xFF0C1514),
     surface = Color(0xFF111827),
+    surfaceContainerLowest = Color(0xFF0C1514),
+    surfaceContainerLow = Color(0xFF152220),
+    surfaceContainer = Color(0xFF192A26),
+    surfaceContainerHigh = Color(0xFF20332E),
+    surfaceContainerHighest = Color(0xFF293F38),
     surfaceVariant = Color(0xFF1F2937),
     onBackground = Color(0xFFF9FAFB),
     onSurface = Color(0xFFF9FAFB),
@@ -43,8 +56,13 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = Color(0xFF1E40AF),
     tertiary = FinanceWarningAmber,
     onTertiary = Color.White,
-    background = Color(0xFFF8FAFC),
+    background = Color(0xFFF4F7F6),
     surface = Color.White,
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFF8FBF9),
+    surfaceContainer = Color(0xFFF0F6F3),
+    surfaceContainerHigh = Color(0xFFEAF2EE),
+    surfaceContainerHighest = Color(0xFFE2EDE7),
     surfaceVariant = Color(0xFFF1F5F9),
     onBackground = Color(0xFF0F172A),
     onSurface = Color(0xFF0F172A),
@@ -72,6 +90,21 @@ fun FinanceFlowTheme(
     CompositionLocalProvider(LocalFinancialColors provides financialColors) {
         MaterialTheme(
             colorScheme = colorScheme,
+            typography = Typography(
+                headlineLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 42.sp, letterSpacing = (-1).sp),
+                headlineMedium = TextStyle(fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 36.sp, letterSpacing = (-0.5).sp),
+                titleLarge = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 32.sp, letterSpacing = (-0.5).sp),
+                titleMedium = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp),
+                bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
+                bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 22.sp),
+                bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 18.sp),
+                labelLarge = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp)
+            ),
+            shapes = Shapes(
+                extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(12.dp),
+                medium = RoundedCornerShape(20.dp), large = RoundedCornerShape(24.dp),
+                extraLarge = RoundedCornerShape(28.dp)
+            ),
             content = content
         )
     }

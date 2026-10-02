@@ -1,5 +1,8 @@
 package com.samuelbaldasso.financeflow.feature.cards
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.samuelbaldasso.financeflow.designsystem.component.FinancialAmountField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -79,6 +82,8 @@ fun CardsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -103,7 +108,7 @@ fun CardsScreen(
                 icon = Icons.Default.CreditCard,
                 actionButtonText = "Ir para Contas",
                 onActionClick = onNavigateToAccounts,
-                modifier = Modifier.padding(padding)
+                modifier = Modifier.padding(padding).padding(horizontal = 20.dp)
             )
         } else {
             val selectedCard = state.selectedCard ?: state.cards.first()
@@ -112,7 +117,7 @@ fun CardsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 20.dp)
             ) {
                 // Card Selector if multiple
                 if (state.cards.size > 1) {
@@ -198,6 +203,7 @@ fun CardsScreen(
                     }
                 } else {
                     LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -372,7 +378,7 @@ private fun CreateInstallmentDialog(
             Text("Compra Parcelada", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -382,14 +388,12 @@ private fun CreateInstallmentDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Valor Total (em centavos)") },
-                    placeholder = { Text("Ex: 120000 para R$ 1.200,00") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                FinancialAmountField(
+                        value = amountText,
+                        onValueChange = { amountText = it },
+                        label = "Valor Total",
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                 OutlinedTextField(
                     value = installmentsText,
@@ -474,7 +478,7 @@ private fun PayInvoiceDialog(
             Text("Pagar Fatura", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
                     text = "Transferência da conta corrente para pagamento da fatura do cartão",
                     style = MaterialTheme.typography.bodySmall,
@@ -512,13 +516,12 @@ private fun PayInvoiceDialog(
                     }
                 }
 
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Valor a Pagar (em centavos)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                FinancialAmountField(
+                        value = amountText,
+                        onValueChange = { amountText = it },
+                        label = "Valor a Pagar",
+                        modifier = Modifier.fillMaxWidth()
+                    )
             }
         },
         confirmButton = {

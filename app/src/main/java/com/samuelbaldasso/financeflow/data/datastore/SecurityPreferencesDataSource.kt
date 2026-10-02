@@ -20,6 +20,7 @@ class SecurityPreferencesDataSource(
     private val dataStore: DataStore<Preferences>
 ) {
     companion object {
+        private val KEY_WIPE_PENDING = booleanPreferencesKey("wipe_pending")
         private val KEY_PIN_HASH = stringPreferencesKey("pin_hash")
         private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val KEY_LOCK_TIMEOUT_MINUTES = intPreferencesKey("lock_timeout_minutes")
@@ -87,6 +88,12 @@ class SecurityPreferencesDataSource(
         dataStore.edit { prefs ->
             prefs[KEY_TELEMETRY_CONSENT] = consent
         }
+    }
+
+    suspend fun isWipePending(): Boolean = dataStore.data.first()[KEY_WIPE_PENDING] ?: false
+
+    suspend fun markWipePending() {
+        dataStore.edit { it[KEY_WIPE_PENDING] = true }
     }
 
     suspend fun clearAll() {

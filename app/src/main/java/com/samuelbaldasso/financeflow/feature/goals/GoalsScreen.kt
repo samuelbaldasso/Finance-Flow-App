@@ -1,5 +1,8 @@
 package com.samuelbaldasso.financeflow.feature.goals
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.samuelbaldasso.financeflow.designsystem.component.FinancialAmountField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,6 +81,8 @@ fun GoalsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -94,13 +99,13 @@ fun GoalsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
+                text = { Text("Nova meta") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 onClick = { onEvent(GoalsUiEvent.OpenCreateDialog) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova Meta")
-            }
+            )
         },
         modifier = modifier
     ) { padding ->
@@ -108,7 +113,7 @@ fun GoalsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             // Goals Summary Hero Card
             GoalsOverviewCard(state = state)
@@ -125,6 +130,7 @@ fun GoalsScreen(
                 )
             } else {
                 LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -390,7 +396,7 @@ private fun CreateGoalDialog(
             Text("Nova Meta", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -400,14 +406,12 @@ private fun CreateGoalDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = targetMinorText,
-                    onValueChange = { targetMinorText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Valor Alvo (em centavos)") },
-                    placeholder = { Text("ex: 1000000 para R$ 10.000,00") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                FinancialAmountField(
+                        value = targetMinorText,
+                        onValueChange = { targetMinorText = it },
+                        label = "Valor Alvo",
+                        modifier = Modifier.fillMaxWidth()
+                    )
             }
         },
         confirmButton = {
@@ -451,7 +455,7 @@ private fun ContributeGoalDialog(
             Text("Aporte para Meta", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
                     text = "Meta: ${goalWithProgress.goal.name}",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
@@ -488,14 +492,12 @@ private fun ContributeGoalDialog(
                     }
                 }
 
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Valor do Aporte (em centavos)") },
-                    placeholder = { Text("ex: 20000 para R$ 200,00") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                FinancialAmountField(
+                        value = amountText,
+                        onValueChange = { amountText = it },
+                        label = "Valor do Aporte",
+                        modifier = Modifier.fillMaxWidth()
+                    )
             }
         },
         confirmButton = {

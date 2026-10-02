@@ -13,6 +13,9 @@ class AuditRepositoryImpl @Inject constructor(
     private val auditLogDao: AuditLogDao
 ) : AuditRepository {
 
+    override fun getAllLogsFlow(): Flow<List<AuditEvent>> =
+        auditLogDao.getAllLogsFlow().map { logs -> logs.map { it.toDomain() } }
+
     override suspend fun recordEvent(event: AuditEvent) {
         auditLogDao.insert(AuditLogEntity.fromDomain(event))
     }

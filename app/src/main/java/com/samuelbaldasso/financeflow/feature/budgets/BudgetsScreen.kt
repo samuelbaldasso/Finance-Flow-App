@@ -1,5 +1,8 @@
 package com.samuelbaldasso.financeflow.feature.budgets
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.samuelbaldasso.financeflow.designsystem.component.FinancialAmountField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +38,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +87,8 @@ fun BudgetsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -100,13 +105,13 @@ fun BudgetsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
+                text = { Text("Novo orçamento") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 onClick = { onEvent(BudgetsUiEvent.OpenCreateDialog) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Novo Orçamento")
-            }
+            )
         },
         modifier = modifier
     ) { padding ->
@@ -114,7 +119,7 @@ fun BudgetsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             // Month selector bar
             Row(
@@ -153,6 +158,7 @@ fun BudgetsScreen(
                 )
             } else {
                 LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -430,7 +436,7 @@ private fun CreateBudgetDialog(
             Text("Novo Orçamento", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 // Category Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -462,14 +468,12 @@ private fun CreateBudgetDialog(
                     }
                 }
 
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Valor Teto (em centavos)") },
-                    placeholder = { Text("ex: 50000 para R$ 500,00") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                FinancialAmountField(
+                        value = amountText,
+                        onValueChange = { amountText = it },
+                        label = "Valor Teto",
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

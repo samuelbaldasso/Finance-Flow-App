@@ -29,7 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,8 +60,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -91,6 +89,8 @@ fun TransactionsListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
                     Column {
                         Text(
@@ -121,13 +121,13 @@ fun TransactionsListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
+                text = { Text("Novo lançamento") },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 onClick = onAddTransactionClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Nova Transação")
-            }
+            )
         },
         modifier = modifier
     ) { padding ->
@@ -135,7 +135,7 @@ fun TransactionsListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
         ) {
             // Cash Flow Mini Summary Header
             CashFlowMiniSummary(incomeMinor = totalIncome, expenseMinor = totalExpense)
@@ -196,6 +196,7 @@ fun TransactionsListScreen(
                 )
             } else {
                 LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
